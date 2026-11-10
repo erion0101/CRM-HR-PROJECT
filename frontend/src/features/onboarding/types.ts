@@ -72,6 +72,10 @@ export interface OnboardingReadingItem {
   startedAtUtc?: string;
   readAtUtc?: string;
   version: number;
+  /** Minutes the employee must spend after first opening the item. */
+  minimumReadingMinutes?: number;
+  /** When "Mark as read" becomes available; set once the item has been opened. */
+  readableAtUtc?: string;
 }
 
 export interface QuizAttemptSummary {
@@ -237,6 +241,7 @@ export interface OnboardingTemplateStepInput {
   documentId?: string;
   externalUrl?: string;
   dependsOnStepOrder?: number;
+  minimumReadingMinutes?: number;
 }
 
 /** Company packages go to every new employee; a project package is added automatically for its project. */

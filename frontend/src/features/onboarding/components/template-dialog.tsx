@@ -27,8 +27,25 @@ export interface TemplateDraft {
 
 type TemplateFormStep = Omit<
   OnboardingTemplateStepInput,
-  'sectionOrder' | 'stepOrder' | 'dependsOnStepOrder' | 'knowledgeArticleId' | 'documentId' | 'externalUrl'
-> & { knowledgeArticleId: string; documentId: string; externalUrl: string; dependsOnStepOrder: string };
+  | 'sectionOrder'
+  | 'stepOrder'
+  | 'dependsOnStepOrder'
+  | 'knowledgeArticleId'
+  | 'documentId'
+  | 'externalUrl'
+  | 'minimumReadingMinutes'
+> & {
+  knowledgeArticleId: string;
+  documentId: string;
+  externalUrl: string;
+  dependsOnStepOrder: string;
+  /** Empty means no minimum. */
+  minimumReadingMinutes: string;
+};
+
+const readingStepTypes: OnboardingStepType[] = ['ReadDocument', 'ReadArticle', 'PolicyAcknowledgment'];
+/** Default for documents added in bulk; HR can change it per step. */
+const defaultReadingMinutes = '2';
 
 interface TemplateFormValues {
   name: string;
@@ -61,7 +78,8 @@ const emptyStep = (): TemplateFormStep => ({
   knowledgeArticleId: '',
   documentId: '',
   externalUrl: '',
-  dependsOnStepOrder: ''
+  dependsOnStepOrder: '',
+  minimumReadingMinutes: ''
 });
 
 function readingStepFor(document: DocumentOption): TemplateFormStep {
@@ -73,7 +91,8 @@ function readingStepFor(document: DocumentOption): TemplateFormStep {
     instructions: `Read "${name}" carefully. The onboarding quiz will ask about it.`,
     expectedOutcome: `You understand the key points of "${name}".`,
     stepType: 'ReadDocument',
-    documentId: document.id
+    documentId: document.id,
+    minimumReadingMinutes: defaultReadingMinutes
   };
 }
 
@@ -91,7 +110,11 @@ function toStepInput(step: TemplateFormStep, index: number): OnboardingTemplateS
     knowledgeArticleId: usesArticle ? step.knowledgeArticleId || undefined : undefined,
     documentId: step.stepType === 'ReadDocument' ? step.documentId || undefined : undefined,
     externalUrl: step.stepType === 'ExternalResource' ? step.externalUrl || undefined : undefined,
-    dependsOnStepOrder: step.dependsOnStepOrder === '' ? undefined : Number(step.dependsOnStepOrder)
+    dependsOnStepOrder: step.dependsOnStepOrder === '' ? undefined : Number(step.dependsOnStepOrder),
+    minimumReadingMinutes:
+      readingStepTypes.includes(step.stepType) && step.minimumReadingMinutes !== ''
+        ? Number(step.minimumReadingMinutes)
+        : undefined
   };
 }
 
@@ -339,6 +362,19 @@ function TemplateStepEditor({
             <option value="">No article</option>
             <OptionList options={articles} />
           </Select>
+        </FieldShell>
+        <FieldShell
+          label="Minimum reading time (minutes)"
+          htmlFor={id('reading-minutes')}
+          hint="Reading steps only. Leave empty for no minimum."
+        >
+          <Input
+            id={id('reading-minutes')}
+            type="number"
+            min={1}
+            max={120}
+            {...register(`steps.${index}.minimumReadingMinutes`)}
+          />
         </FieldShell>
         <FieldShell label="External URL" htmlFor={id('url')}>
           <Input id={id('url')} type="url" {...register(`steps.${index}.externalUrl`)} />

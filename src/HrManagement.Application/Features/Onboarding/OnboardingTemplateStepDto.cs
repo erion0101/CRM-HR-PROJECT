@@ -16,4 +16,5 @@ public sealed record OnboardingTemplateStepDto(
     Guid? KnowledgeArticleId,
     Guid? DocumentId,
     string? ExternalUrl,
-    Guid? DependsOnStepId);
+    Guid? DependsOnStepId,
+    int? MinimumReadingMinutes = null);

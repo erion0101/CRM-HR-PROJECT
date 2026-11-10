@@ -14,6 +14,12 @@ public sealed class OnboardingReadingProgress : Entity
     public OnboardingReadingStatus Status { get; private set; } = OnboardingReadingStatus.Unread;
     public DateTimeOffset? StartedAtUtc { get; private set; }
     public DateTimeOffset? ReadAtUtc { get; private set; }
+    public int? MinimumReadingMinutes { get; private set; }
+
+    /// <summary>Earliest time the item may be marked as read, once it has been opened.</summary>
+    public DateTimeOffset? ReadableAtUtc => StartedAtUtc is { } started && MinimumReadingMinutes is { } minutes
+        ? started.AddMinutes(minutes)
+        : null;
 
     public static OnboardingReadingProgress Create(Guid organizationId, Guid cycleId, OnboardingStepProgress step, Guid? documentVersionId)
     {
@@ -28,7 +34,8 @@ public sealed class OnboardingReadingProgress : Entity
             DocumentVersionId = documentVersionId,
             KnowledgeArticleId = step.KnowledgeArticleId,
             KnowledgeRevisionId = step.KnowledgeRevisionId,
-            IsRequired = step.IsRequired
+            IsRequired = step.IsRequired,
+            MinimumReadingMinutes = step.MinimumReadingMinutes
         };
     }
 
@@ -47,6 +54,11 @@ public sealed class OnboardingReadingProgress : Entity
         if (Status == OnboardingReadingStatus.Read) return;
         if (Status == OnboardingReadingStatus.Unread && HasReadableSource)
             throw new DomainException("Open the document before marking it as read.");
+        if (HasReadableSource && ReadableAtUtc is { } readableAt && now < readableAt)
+        {
+            var remaining = Math.Max(1, (int)Math.Ceiling((readableAt - now).TotalMinutes));
+            throw new DomainException($"Take a little more time with this document. You can mark it as read in about {remaining} minute{(remaining == 1 ? "" : "s")}.");
+        }
         Status = OnboardingReadingStatus.Read;
         StartedAtUtc ??= now.ToUniversalTime();
         ReadAtUtc = now.ToUniversalTime();

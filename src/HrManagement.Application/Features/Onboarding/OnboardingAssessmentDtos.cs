@@ -13,7 +13,9 @@ public sealed record OnboardingReadingItemDto(
     OnboardingReadingStatus Status,
     DateTimeOffset? StartedAtUtc,
     DateTimeOffset? ReadAtUtc,
-    long Version);
+    long Version,
+    int? MinimumReadingMinutes = null,
+    DateTimeOffset? ReadableAtUtc = null);
 
 public sealed record OnboardingQuizAttemptSummaryDto(
     Guid Id,

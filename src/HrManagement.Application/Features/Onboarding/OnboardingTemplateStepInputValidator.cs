@@ -14,6 +14,8 @@ public sealed class OnboardingTemplateStepInputValidator : AbstractValidator<Onb
         RuleFor(x => x.SectionOrder).GreaterThanOrEqualTo(0);
         RuleFor(x => x.StepOrder).GreaterThanOrEqualTo(0);
         RuleFor(x => x.DueAfterDays).InclusiveBetween(0, 365);
+        RuleFor(x => x.MinimumReadingMinutes).InclusiveBetween(1, Domain.OnboardingTemplateStep.MaxMinimumReadingMinutes)
+            .When(x => x.MinimumReadingMinutes.HasValue);
         RuleFor(x => x.KnowledgeArticleId).NotNull().When(x => x.StepType is Domain.OnboardingStepType.ReadArticle or Domain.OnboardingStepType.PolicyAcknowledgment);
         RuleFor(x => x.DocumentId).NotNull().When(x => x.StepType == Domain.OnboardingStepType.ReadDocument);
         RuleFor(x => x.ExternalUrl).NotEmpty().When(x => x.StepType == Domain.OnboardingStepType.ExternalResource);

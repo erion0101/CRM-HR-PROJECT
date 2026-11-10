@@ -20,6 +20,7 @@ public sealed class OnboardingStepProgress : Entity
     public Guid? DocumentId { get; private set; }
     public string? ExternalUrl { get; private set; }
     public Guid? DependsOnTemplateStepId { get; private set; }
+    public int? MinimumReadingMinutes { get; private set; }
     public OnboardingStepStatus Status { get; private set; } = OnboardingStepStatus.NotStarted;
     public string? CompletionNote { get; private set; }
     public Guid? CompletedByUserId { get; private set; }
@@ -47,7 +48,8 @@ public sealed class OnboardingStepProgress : Entity
         KnowledgeRevisionId = knowledgeRevisionId,
         DocumentId = step.DocumentId,
         ExternalUrl = step.ExternalUrl,
-        DependsOnTemplateStepId = step.DependsOnStepId
+        DependsOnTemplateStepId = step.DependsOnStepId,
+        MinimumReadingMinutes = step.MinimumReadingMinutes
     };
 
     public void SetProgress(OnboardingStepStatus status, string? note, Guid actorUserId, bool dependencyCompleted, DateTimeOffset now)

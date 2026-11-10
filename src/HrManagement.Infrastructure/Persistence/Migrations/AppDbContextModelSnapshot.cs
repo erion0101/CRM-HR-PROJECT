@@ -1818,6 +1818,9 @@ namespace HrManagement.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("KnowledgeRevisionId")
                         .HasColumnType("uuid");
 
+                    b.Property<int?>("MinimumReadingMinutes")
+                        .HasColumnType("integer");
+
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid");
 
@@ -1918,6 +1921,9 @@ namespace HrManagement.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("KnowledgeRevisionId")
                         .HasColumnType("uuid");
+
+                    b.Property<int?>("MinimumReadingMinutes")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid");
@@ -2094,6 +2100,9 @@ namespace HrManagement.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("KnowledgeArticleId")
                         .HasColumnType("uuid");
+
+                    b.Property<int?>("MinimumReadingMinutes")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid");

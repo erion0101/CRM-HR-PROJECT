@@ -50,7 +50,7 @@ public sealed class CreateOnboardingTemplateCommandHandler(IOnboardingRepository
             var step = OnboardingTemplateStep.Create(organizationId, versionId, input.SectionTitle, input.SectionOrder, input.Title,
                 input.Instructions, input.ExpectedOutcome, input.StepType, input.StepOrder, input.DueAfterDays, input.IsRequired,
                 input.KnowledgeArticleId, input.DocumentId, input.ExternalUrl,
-                input.DependsOnStepOrder is { } order ? created[order].Id : null);
+                input.DependsOnStepOrder is { } order ? created[order].Id : null, input.MinimumReadingMinutes);
             created.Add(input.StepOrder, step);
             repository.Add(step);
         }

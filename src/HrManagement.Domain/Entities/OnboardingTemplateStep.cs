@@ -18,11 +18,19 @@ public sealed class OnboardingTemplateStep : Entity
     public Guid? DocumentId { get; private set; }
     public string? ExternalUrl { get; private set; }
     public Guid? DependsOnStepId { get; private set; }
+    /// <summary>For reading steps: minutes between first opening the item and being allowed to mark it as read.</summary>
+    public int? MinimumReadingMinutes { get; private set; }
+
+    public const int MaxMinimumReadingMinutes = 120;
 
     public static OnboardingTemplateStep Create(Guid organizationId, Guid templateVersionId, string sectionTitle, int sectionOrder,
         string title, string instructions, string expectedOutcome, OnboardingStepType stepType, int stepOrder, int dueAfterDays,
-        bool isRequired, Guid? knowledgeArticleId, Guid? documentId, string? externalUrl, Guid? dependsOnStepId)
+        bool isRequired, Guid? knowledgeArticleId, Guid? documentId, string? externalUrl, Guid? dependsOnStepId,
+        int? minimumReadingMinutes = null)
     {
+        if (minimumReadingMinutes is < 1 or > MaxMinimumReadingMinutes)
+            throw new DomainException($"Minimum reading time must be between 1 and {MaxMinimumReadingMinutes} minutes.");
+        var isReading = stepType is OnboardingStepType.ReadDocument or OnboardingStepType.ReadArticle or OnboardingStepType.PolicyAcknowledgment;
         if (dueAfterDays is < 0 or > 365) throw new DomainException("Step due offset must be between 0 and 365 days.");
         if (stepType == OnboardingStepType.ReadArticle && knowledgeArticleId is null) throw new DomainException("Article steps require a knowledge article.");
         if (stepType == OnboardingStepType.ReadDocument && documentId is null) throw new DomainException("Document steps require a document.");
@@ -43,7 +51,8 @@ public sealed class OnboardingTemplateStep : Entity
             KnowledgeArticleId = knowledgeArticleId,
             DocumentId = documentId,
             ExternalUrl = string.IsNullOrWhiteSpace(externalUrl) ? null : externalUrl.Trim(),
-            DependsOnStepId = dependsOnStepId
+            DependsOnStepId = dependsOnStepId,
+            MinimumReadingMinutes = isReading ? minimumReadingMinutes : null
         };
     }
 

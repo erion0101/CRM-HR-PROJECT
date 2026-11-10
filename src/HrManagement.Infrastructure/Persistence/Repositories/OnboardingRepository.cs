@@ -54,7 +54,7 @@ internal sealed class OnboardingRepository(AppDbContext db, ICurrentUserService 
                 .OrderBy(x => x.SectionOrder).ThenBy(x => x.StepOrder)
                 .Select(x => new OnboardingTemplateStepDto(x.Id, x.SectionTitle, x.SectionOrder, x.Title, x.Instructions,
                     x.ExpectedOutcome, x.StepType, x.StepOrder, x.DueAfterDays, x.IsRequired, x.KnowledgeArticleId,
-                    x.DocumentId, x.ExternalUrl, x.DependsOnStepId)).ToListAsync(cancellationToken);
+                    x.DocumentId, x.ExternalUrl, x.DependsOnStepId, x.MinimumReadingMinutes)).ToListAsync(cancellationToken);
             result.Add(new OnboardingTemplateDto(template.Id, template.Name, template.Description, template.DepartmentId, template.PositionId,
                 template.Kind, template.ProjectId, template.AutoAssignToNewEmployees,
                 template.DurationDays, template.Status, template.CurrentVersion, template.PublishedVersion, steps, template.Version));
@@ -438,7 +438,10 @@ internal sealed class OnboardingRepository(AppDbContext db, ICurrentUserService 
                                  orderby step.SectionOrder, step.StepOrder
                                  select new OnboardingReadingItemDto(item.Id, item.StepProgressId, step.SectionTitle, step.Title,
                                      item.IsRequired, item.DocumentId, item.KnowledgeArticleId, item.Status, item.StartedAtUtc,
-                                     item.ReadAtUtc, item.Version)).ToListAsync(cancellationToken);
+                                     item.ReadAtUtc, item.Version, item.MinimumReadingMinutes,
+                                     item.StartedAtUtc != null && item.MinimumReadingMinutes != null
+                                         ? item.StartedAtUtc.Value.AddMinutes(item.MinimumReadingMinutes.Value) : null))
+                                 .ToListAsync(cancellationToken);
         }
         attempts.AddRange(await (from attempt in db.OnboardingQuizAttempts.AsNoTracking()
                                  join cycle in db.OnboardingReadingCycles.AsNoTracking() on attempt.ReadingCycleId equals cycle.Id

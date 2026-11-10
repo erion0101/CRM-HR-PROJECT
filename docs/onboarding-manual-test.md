@@ -72,7 +72,7 @@ For each required item:
 
 1. Choose **Open**. The file streams from `/api/v1/onboarding/assignments/{assignmentId}/reading/{stepId}/download` after ownership and current-cycle checks.
 2. Confirm the UI moves the item to `InProgress`.
-3. Choose **Mark as read** and confirm the state is saved as `Read`. **Mark as read** stays disabled until the item has been opened, and the API rejects `Read` for an `Unread` item.
+3. Choose **Mark as read** and confirm the state is saved as `Read`. **Mark as read** stays disabled until the item has been opened, and the API rejects `Read` for an `Unread` item. When the step has a minimum reading time, the button shows a countdown from the first opening (reopening does not restart it) and the API rejects `Read` until the time has passed.
 
 At nine of ten required items, progress must show `90%` and the quiz must remain `Locked`. After the tenth, progress must show `100%` and the quiz must become `Available`.
 

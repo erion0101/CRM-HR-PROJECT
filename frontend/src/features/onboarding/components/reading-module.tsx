@@ -5,7 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
+import { useNow } from '../hooks/use-now';
 import type { OnboardingReadingItem, OnboardingReadingStatus } from '../types';
+import { formatCountdown } from '../utils/format-countdown';
 
 type ReadingHandler = (item: OnboardingReadingItem, status: OnboardingReadingStatus) => void;
 
@@ -56,6 +58,11 @@ function ReadingItem({
   const hasSource = Boolean(item.documentId || item.knowledgeArticleId);
   // The backend rejects "Mark as read" for an item that was never opened; mirror that here.
   const mustOpenFirst = hasSource && item.status === 'Unread';
+  // The backend enforces the minimum reading time; the countdown only explains the disabled button.
+  const readableAt = item.readableAtUtc ? Date.parse(item.readableAtUtc) : undefined;
+  const now = useNow(!isRead && readableAt !== undefined && readableAt > Date.now());
+  const remainingMs = readableAt !== undefined ? readableAt - now : 0;
+  const waiting = !isRead && !mustOpenFirst && remainingMs > 0;
   const markOpened = () => {
     if (item.status === 'Unread') onReading(item, 'InProgress');
   };
@@ -67,6 +74,7 @@ function ReadingItem({
         <strong>{item.title}</strong>
         <small>
           {item.isRequired ? 'Required' : 'Optional'} · {mustOpenFirst ? 'Open to start reading' : item.status}
+          {item.minimumReadingMinutes && !isRead ? ` · at least ${item.minimumReadingMinutes} min` : ''}
         </small>
       </div>
       <div className="row-actions">
@@ -95,11 +103,17 @@ function ReadingItem({
         ) : (
           <Button
             size="small"
-            disabled={busy || mustOpenFirst}
-            title={mustOpenFirst ? 'Open the document before marking it as read' : undefined}
+            disabled={busy || mustOpenFirst || waiting}
+            title={
+              mustOpenFirst
+                ? 'Open the document before marking it as read'
+                : waiting
+                  ? 'Take a little more time with this document'
+                  : undefined
+            }
             onClick={() => onReading(item, 'Read')}
           >
-            <Check size={14} /> Mark as read
+            <Check size={14} /> {waiting ? `Mark as read in ${formatCountdown(remainingMs)}` : 'Mark as read'}
           </Button>
         )}
       </div>
