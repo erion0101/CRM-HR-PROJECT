@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
 import { EmptyState } from '@/components/feedback/empty-state';
 import { ErrorState } from '@/components/feedback/error-state';
 import { Skeleton } from '@/components/feedback/skeleton';
 import { PageHeader } from '@/components/navigation/page-header';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
 import { getMyOnboarding, startQuizAttempt, updateOnboardingStep, updateReadingProgress } from '../api/onboarding-api';
@@ -24,11 +26,13 @@ import type {
 } from '../types';
 
 const finishedStatuses = ['Completed', 'Cancelled', 'Superseded'];
+const hiddenStatuses = ['Cancelled', 'Superseded'];
 
 export function OnboardingPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const query = useQuery({ queryKey: ['onboarding', 'me'], queryFn: getMyOnboarding });
+  const [selectedJourneyId, setSelectedJourneyId] = useState<string>();
 
   const updateStep = useOnboardingMutation({
     mutationFn: ({
@@ -81,8 +85,12 @@ export function OnboardingPage() {
 
   const dashboard = query.data;
   const quizResult = (location.state as { quizResult?: QuizResult } | null)?.quizResult;
+  // An employee can have a company journey and a separate project journey at the same time.
+  const visibleJourneys = dashboard.journeys.filter((journey) => !hiddenStatuses.includes(journey.status));
+  const openJourneys = visibleJourneys.filter((journey) => !finishedStatuses.includes(journey.status));
+  const preferredId = selectedJourneyId ?? quizResult?.assignment.id;
   const activeJourney: OnboardingAssignment | undefined =
-    dashboard.journeys.find((journey) => !finishedStatuses.includes(journey.status)) ?? dashboard.journeys[0];
+    visibleJourneys.find((journey) => journey.id === preferredId) ?? openJourneys[0] ?? visibleJourneys[0];
   const next = activeJourney?.steps.find((step) => step.status !== 'Completed');
   const subtitle = `${dashboard.position ?? 'Team member'}${dashboard.department ? ` · ${dashboard.department}` : ''}`;
 
@@ -97,6 +105,24 @@ export function OnboardingPage() {
       </PageHeader>
 
       {quizResult ? <QuizResultCard result={quizResult} /> : null}
+
+      {visibleJourneys.length > 1 ? (
+        <div className="row-actions" role="tablist" aria-label="Your onboarding journeys">
+          {visibleJourneys.map((journey) => (
+            <Button
+              key={journey.id}
+              size="small"
+              role="tab"
+              aria-selected={journey.id === activeJourney?.id}
+              variant={journey.id === activeJourney?.id ? 'primary' : 'secondary'}
+              onClick={() => setSelectedJourneyId(journey.id)}
+            >
+              {journey.templateName}
+              {journey.status === 'Completed' ? ' ✓' : ` · ${journey.progressPercent}%`}
+            </Button>
+          ))}
+        </div>
+      ) : null}
 
       {activeJourney ? (
         <>
