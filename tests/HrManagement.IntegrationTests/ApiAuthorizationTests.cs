@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using HrManagement.Application.Features.Ai;
+using HrManagement.Application.Features.Notifications;
 using HrManagement.Domain;
 using HrManagement.Infrastructure;
 using HrManagement.Infrastructure.Persistence;
@@ -751,6 +752,41 @@ public sealed class ApiAuthorizationTests : IAsyncLifetime
         Assert.Contains(reminders, x => x.RecipientEmployeeId == late.Id && x.LinkPath == "/onboarding");
         Assert.Contains(reminders, x => x.RecipientEmployeeId == reviewer.Id && x.Title.Contains("DUE-1"));
         Assert.All(await db.OnboardingStepProgresses.ToListAsync(), step => Assert.NotNull(step.OverdueNotifiedAtUtc));
+    }
+
+    [Fact]
+    public async Task Old_notifications_are_purged_by_read_state_and_age()
+    {
+        using var admin = Client();
+        var token = await LoginAsync(admin, AdminEmail, AdminPassword);
+        var person = await CreateEmployeeAsync(admin, token, "RET-1", "retention.person@integration.local");
+        await using (var seed = _factory!.Services.CreateAsyncScope())
+        {
+            var db = seed.ServiceProvider.GetRequiredService<AppDbContext>();
+            var organizationId = await db.Employees.Where(x => x.Id == person.Id).Select(x => x.OrganizationId).SingleAsync();
+            Notification Make(string title, bool read)
+            {
+                var notification = Notification.Create(organizationId, person.Id, NotificationType.QuizUnlocked, title, "Message", "/onboarding");
+                if (read) notification.MarkRead(DateTimeOffset.UtcNow);
+                return notification;
+            }
+            db.Notifications.AddRange(Make("old-read", true), Make("old-unread", false), Make("ancient-unread", false), Make("fresh-read", true));
+            await db.SaveChangesAsync();
+            var now = DateTimeOffset.UtcNow;
+            async Task Backdate(string title, int days) => await db.Notifications.Where(x => x.Title == title)
+                .ExecuteUpdateAsync(x => x.SetProperty(n => n.CreatedAtUtc, now.AddDays(-days)));
+            await Backdate("old-read", NotificationRetention.ReadDays + 1);
+            await Backdate("old-unread", NotificationRetention.ReadDays + 1);
+            await Backdate("ancient-unread", NotificationRetention.UnreadDays + 1);
+        }
+
+        await using (var scope = _factory.Services.CreateAsyncScope())
+            Assert.Equal(2, await scope.ServiceProvider.GetRequiredService<INotificationRetentionProcessor>().PurgeExpiredAsync(CancellationToken.None));
+
+        await using var check = _factory.Services.CreateAsyncScope();
+        var remaining = await check.ServiceProvider.GetRequiredService<AppDbContext>().Notifications
+            .Where(x => x.RecipientEmployeeId == person.Id).Select(x => x.Title).OrderBy(x => x).ToListAsync();
+        Assert.Equal(["fresh-read", "old-unread"], remaining);
     }
 
     private static async Task<JsonElement[]> ActiveJourneysAsync(HttpClient client, Guid employeeId)
