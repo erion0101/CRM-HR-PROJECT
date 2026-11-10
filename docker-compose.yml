@@ -1,0 +1,130 @@
+name: hr-management
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-hr_management}
+      POSTGRES_USER: ${POSTGRES_USER:-hr_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hr_app} -d ${POSTGRES_DB:-hr_management}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:8-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  clamav:
+    image: clamav/clamav-debian:stable
+    volumes:
+      - clamav-data:/var/lib/clamav
+    healthcheck:
+      test: ["CMD-SHELL", "clamdscan --ping 3"]
+      interval: 15s
+      timeout: 10s
+      retries: 40
+      start_period: 90s
+    restart: unless-stopped
+
+  migrate:
+    build:
+      context: .
+      target: api
+    command: ["--migrate-only"]
+    environment: &app-environment
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=${POSTGRES_DB:-hr_management};Username=${POSTGRES_USER:-hr_app};Password=${POSTGRES_PASSWORD}
+      ConnectionStrings__Redis: redis:6379
+      Storage__RootPath: /data
+      Storage__MaxUploadBytes: ${MAX_UPLOAD_BYTES:-26214400}
+      ClamAv__Host: clamav
+      ClamAv__Port: 3310
+      Seed__OrganizationName: ${ORGANIZATION_NAME:-Local Organization}
+      Seed__AdminEmail: ${ADMIN_EMAIL:?Set ADMIN_EMAIL in .env}
+      Seed__AdminPassword: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+      Seed__DemoUsersPassword: ${DEMO_USERS_PASSWORD:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_API_KEY_FILE: ${OPENAI_API_KEY_FILE:-}
+      Ai__Enabled: ${AI_ENABLED:-false}
+      Ai__RealDataApproved: ${AI_REAL_DATA_APPROVED:-false}
+      Ai__OrganizationTimeZone: ${ORGANIZATION_TIMEZONE:-Europe/Belgrade}
+      Ai__ChatModel: ${OPENAI_MODEL:-gpt-6.1-sol}
+      Ai__EmbeddingModel: ${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
+      Ai__MonthlyBudgetUsd: ${AI_MONTHLY_BUDGET_USD:-50}
+      Ai__InputCostPerMillionUsd: ${AI_INPUT_COST_PER_MILLION_USD:-0}
+      Ai__OutputCostPerMillionUsd: ${AI_OUTPUT_COST_PER_MILLION_USD:-0}
+    volumes:
+      - ./data:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build:
+      context: .
+      target: api
+    environment:
+      <<: *app-environment
+      ASPNETCORE_URLS: http://+:8080
+    volumes:
+      - ./data:/data
+    ports:
+      - "127.0.0.1:${API_PORT:-8080}:8080"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      target: worker
+    environment: *app-environment
+    volumes:
+      - ./data:/data
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: /api/v1
+    ports:
+      - "127.0.0.1:${WEB_PORT:-3000}:8080"
+    depends_on:
+      api:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  redis-data:
+  clamav-data:

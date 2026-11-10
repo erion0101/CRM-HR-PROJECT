@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../../src/HrManagement.Domain/HrManagement.Domain.csproj" />
+    <ProjectReference Include="../../src/HrManagement.Application/HrManagement.Application.csproj" />
+    <ProjectReference Include="../../src/HrManagement.Infrastructure/HrManagement.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/HrManagement.Api/HrManagement.Api.csproj" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="NetArchTest.Rules" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

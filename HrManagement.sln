@@ -1,0 +1,67 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HrManagement.Domain", "src\HrManagement.Domain\HrManagement.Domain.csproj", "{8B0E0F1A-1111-4B3B-8111-111111111111}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HrManagement.Application", "src\HrManagement.Application\HrManagement.Application.csproj", "{8B0E0F1A-2222-4B3B-8222-222222222222}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HrManagement.Infrastructure", "src\HrManagement.Infrastructure\HrManagement.Infrastructure.csproj", "{8B0E0F1A-3333-4B3B-8333-333333333333}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HrManagement.Api", "src\HrManagement.Api\HrManagement.Api.csproj", "{8B0E0F1A-4444-4B3B-8444-444444444444}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HrManagement.Worker", "src\HrManagement.Worker\HrManagement.Worker.csproj", "{8B0E0F1A-5555-4B3B-8555-555555555555}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HrManagement.Domain.Tests", "tests\HrManagement.Domain.Tests\HrManagement.Domain.Tests.csproj", "{8B0E0F1A-6666-4B3B-8666-666666666666}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HrManagement.Application.Tests", "tests\HrManagement.Application.Tests\HrManagement.Application.Tests.csproj", "{8B0E0F1A-7777-4B3B-8777-777777777777}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HrManagement.IntegrationTests", "tests\HrManagement.IntegrationTests\HrManagement.IntegrationTests.csproj", "{8B0E0F1A-8888-4B3B-8888-888888888888}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HrManagement.ArchitectureTests", "tests\HrManagement.ArchitectureTests\HrManagement.ArchitectureTests.csproj", "{8B0E0F1A-9999-4B3B-8999-999999999999}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8B0E0F1A-1111-4B3B-8111-111111111111}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B0E0F1A-1111-4B3B-8111-111111111111}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B0E0F1A-1111-4B3B-8111-111111111111}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B0E0F1A-1111-4B3B-8111-111111111111}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B0E0F1A-2222-4B3B-8222-222222222222}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B0E0F1A-2222-4B3B-8222-222222222222}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B0E0F1A-2222-4B3B-8222-222222222222}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B0E0F1A-2222-4B3B-8222-222222222222}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B0E0F1A-3333-4B3B-8333-333333333333}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B0E0F1A-3333-4B3B-8333-333333333333}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B0E0F1A-3333-4B3B-8333-333333333333}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B0E0F1A-3333-4B3B-8333-333333333333}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B0E0F1A-4444-4B3B-8444-444444444444}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B0E0F1A-4444-4B3B-8444-444444444444}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B0E0F1A-4444-4B3B-8444-444444444444}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B0E0F1A-4444-4B3B-8444-444444444444}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B0E0F1A-5555-4B3B-8555-555555555555}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B0E0F1A-5555-4B3B-8555-555555555555}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B0E0F1A-5555-4B3B-8555-555555555555}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B0E0F1A-5555-4B3B-8555-555555555555}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B0E0F1A-6666-4B3B-8666-666666666666}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B0E0F1A-6666-4B3B-8666-666666666666}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B0E0F1A-6666-4B3B-8666-666666666666}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B0E0F1A-6666-4B3B-8666-666666666666}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B0E0F1A-7777-4B3B-8777-777777777777}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B0E0F1A-7777-4B3B-8777-777777777777}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B0E0F1A-7777-4B3B-8777-777777777777}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B0E0F1A-7777-4B3B-8777-777777777777}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B0E0F1A-8888-4B3B-8888-888888888888}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B0E0F1A-8888-4B3B-8888-888888888888}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B0E0F1A-8888-4B3B-8888-888888888888}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B0E0F1A-8888-4B3B-8888-888888888888}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B0E0F1A-9999-4B3B-8999-999999999999}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B0E0F1A-9999-4B3B-8999-999999999999}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B0E0F1A-9999-4B3B-8999-999999999999}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B0E0F1A-9999-4B3B-8999-999999999999}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
