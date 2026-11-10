@@ -1,4 +1,4 @@
-import { BookOpen, FolderKanban, ListChecks, Settings2 } from 'lucide-react';
+import { BarChart3, BookOpen, FolderKanban, ListChecks, Settings2 } from 'lucide-react';
 
 import { canManageOnboarding } from '@/app/access';
 import { WorkspaceTabs, type WorkspaceTab } from '@/components/navigation/workspace-tabs';
@@ -11,6 +11,9 @@ export function OnboardingWorkspaceTabs() {
     { label: 'Company knowledge', to: '/knowledge', icon: BookOpen },
     { label: 'Projects', to: '/projects', icon: FolderKanban }
   ];
-  if (canManageOnboarding(user)) items.push({ label: 'Manage', to: '/onboarding/manage', icon: Settings2 });
+  if (canManageOnboarding(user)) {
+    items.push({ label: 'Manage', to: '/onboarding/manage', icon: Settings2 });
+    items.push({ label: 'Insights', to: '/onboarding/insights', icon: BarChart3 });
+  }
   return <WorkspaceTabs label="Onboarding workspace" items={items} />;
 }

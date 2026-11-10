@@ -28,6 +28,7 @@ const ProjectDetailPage = lazyWithRetry(() => import('@/features/projects/pages/
 const CompanyPage = lazyWithRetry(() => import('@/features/company/pages/company-page').then((module) => ({ default: module.CompanyPage })));
 const OnboardingPage = lazyWithRetry(() => import('@/features/onboarding/pages/onboarding-page').then((module) => ({ default: module.OnboardingPage })));
 const OnboardingManagementPage = lazyWithRetry(() => import('@/features/onboarding/pages/onboarding-management-page').then((module) => ({ default: module.OnboardingManagementPage })));
+const OnboardingInsightsPage = lazyWithRetry(() => import('@/features/onboarding/pages/onboarding-insights-page').then((module) => ({ default: module.OnboardingInsightsPage })));
 const OnboardingQuizPage = lazyWithRetry(() => import('@/features/onboarding/pages/onboarding-quiz-page').then((module) => ({ default: module.OnboardingQuizPage })));
 const ForbiddenPage = lazyWithRetry(() => import('@/features/system/pages/status-pages').then((module) => ({ default: module.ForbiddenPage })));
 const NotFoundPage = lazyWithRetry(() => import('@/features/system/pages/status-pages').then((module) => ({ default: module.NotFoundPage })));
@@ -56,6 +57,7 @@ export const router = createBrowserRouter([
         { path: 'company', element: <RoleRoute roles={['HR']}>{deferred(<CompanyPage />)}</RoleRoute> },
         { path: 'onboarding', element: deferred(<OnboardingPage />) },
         { path: 'onboarding/manage', element: <RoleRoute roles={['HR', 'Manager']}>{deferred(<OnboardingManagementPage />)}</RoleRoute> },
+        { path: 'onboarding/insights', element: <RoleRoute roles={['HR', 'Manager']}>{deferred(<OnboardingInsightsPage />)}</RoleRoute> },
         { path: 'onboarding/quiz/:attemptId', element: deferred(<OnboardingQuizPage />) },
         { path: 'ai-assistant', element: deferred(<AiAssistantPage />) },
         { path: 'ai-assistant/:conversationId', element: deferred(<AiAssistantPage />) },

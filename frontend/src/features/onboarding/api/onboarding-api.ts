@@ -2,6 +2,7 @@ import { http } from '@/lib/api-client';
 import type {
   OnboardingAssignment,
   OnboardingDashboard,
+  OnboardingInsights,
   OnboardingQuizAdmin,
   OnboardingQuizSource,
   OnboardingReadingItem,
@@ -210,5 +211,10 @@ export async function deleteOnboardingQuizQuestion(
   const { data } = await http.delete<OnboardingQuizAdmin>(`/onboarding/quizzes/${quizId}/questions/${questionId}`, {
     headers: { 'If-Match': `"${version}"` }
   });
+  return data;
+}
+
+export async function getOnboardingInsights(): Promise<OnboardingInsights> {
+  const { data } = await http.get<OnboardingInsights>('/onboarding/insights');
   return data;
 }

@@ -259,3 +259,35 @@ export interface OnboardingTemplate {
   steps: (OnboardingTemplateStepInput & { id: string; dependsOnStepId?: string })[];
   version: number;
 }
+
+export type OnboardingAttentionReason = 'OverdueSteps' | 'RepeatedQuizFailures' | 'AwaitingReview' | 'NotStarted';
+
+export interface OnboardingAttentionItem {
+  assignmentId: string;
+  employeeId: string;
+  employeeName: string;
+  journeyName: string;
+  startDate: string;
+  overdueSteps: number;
+  failedAttempts: number;
+  reasons: OnboardingAttentionReason[];
+}
+
+export interface OnboardingDocumentDifficulty {
+  documentId?: string;
+  documentLabel: string;
+  answers: number;
+  incorrectAnswers: number;
+  incorrectRate: number;
+}
+
+export interface OnboardingInsights {
+  activeJourneys: number;
+  completedLast30Days: number;
+  overdueJourneys: number;
+  awaitingReview: number;
+  firstAttemptPassRate?: number | null;
+  averageAttemptsToPass?: number | null;
+  needsAttention: OnboardingAttentionItem[];
+  documentDifficulty: OnboardingDocumentDifficulty[];
+}

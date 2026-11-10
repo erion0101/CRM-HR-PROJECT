@@ -646,6 +646,37 @@ public sealed class ApiAuthorizationTests : IAsyncLifetime
         Assert.Equal(projectId, separate.GetProperty("projectId").GetGuid());
     }
 
+    [Fact]
+    public async Task Onboarding_insights_flag_overdue_and_unstarted_journeys()
+    {
+        using var admin = Client();
+        var token = await LoginAsync(admin, AdminEmail, AdminPassword);
+        var empty = await ReadJsonAsync(await admin.GetAsync("/api/v1/onboarding/insights"));
+        Assert.Equal(0, empty.GetProperty("activeJourneys").GetInt32());
+        Assert.Equal(JsonValueKind.Null, empty.GetProperty("firstAttemptPassRate").ValueKind);
+
+        var package = await CreatePublishedPackageAsync(admin, token, "Company onboarding", "Company", null);
+        var late = await CreateEmployeeAsync(admin, token, "LATE-1", "late.starter@integration.local");
+        var startDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-30).ToString("yyyy-MM-dd");
+        await SendAsync(admin, HttpMethod.Post, "/api/v1/onboarding/assignments", new
+        {
+            employeeId = late.Id, templateId = package.Id, projectId = (Guid?)null, managerEmployeeId = (Guid?)null,
+            mentorEmployeeId = (Guid?)null, startDate
+        }, token);
+
+        var insights = await ReadJsonAsync(await admin.GetAsync("/api/v1/onboarding/insights"));
+
+        Assert.Equal(1, insights.GetProperty("activeJourneys").GetInt32());
+        Assert.Equal(1, insights.GetProperty("overdueJourneys").GetInt32());
+        var item = Assert.Single(insights.GetProperty("needsAttention").EnumerateArray());
+        Assert.Equal(late.Id, item.GetProperty("employeeId").GetGuid());
+        Assert.Equal(1, item.GetProperty("overdueSteps").GetInt32());
+        var reasons = item.GetProperty("reasons").EnumerateArray().Select(x => x.GetString()).ToArray();
+        Assert.Contains("OverdueSteps", reasons);
+        Assert.Contains("NotStarted", reasons);
+        Assert.Empty(insights.GetProperty("documentDifficulty").EnumerateArray());
+    }
+
     private static async Task<JsonElement[]> ActiveJourneysAsync(HttpClient client, Guid employeeId)
     {
         var assignments = await ReadJsonAsync(await client.GetAsync($"/api/v1/onboarding/assignments?employeeId={employeeId}"));
