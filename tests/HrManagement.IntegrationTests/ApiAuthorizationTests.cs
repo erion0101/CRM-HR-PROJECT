@@ -594,6 +594,82 @@ public sealed class ApiAuthorizationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Joining_a_project_adds_its_package_to_a_new_hire_or_as_a_separate_journey()
+    {
+        using var admin = Client();
+        var token = await LoginAsync(admin, AdminEmail, AdminPassword);
+        var lead = await CreateEmployeeAsync(admin, token, "LEAD-1", "project.lead@integration.local");
+        var project = await ReadJsonAsync(await SendAsync(admin, HttpMethod.Post, "/api/v1/projects", new
+        {
+            code = "PORTAL", name = "Client Portal", purpose = "Customer self-service", description = "Portal project",
+            departmentId = (Guid?)null, leadEmployeeId = lead.Id, onboardingContactEmployeeId = lead.Id, status = "Active",
+            links = Array.Empty<object>()
+        }, token));
+        var projectId = project.GetProperty("id").GetGuid();
+
+        // An existing employee activated before any default package exists has no journey yet.
+        var existing = await CreateEmployeeAsync(admin, token, "OLD-1", "existing.person@integration.local");
+        await SendAsync(admin, HttpMethod.Put, $"/api/v1/employees/{existing.Id}/employment",
+            new { status = "Active", startDate = "2026-01-05", endDate = (string?)null }, token);
+
+        var company = await CreatePublishedPackageAsync(admin, token, "Company onboarding", "Company", null);
+        await SendWithEtagAsync(admin, HttpMethod.Put, $"/api/v1/onboarding/templates/{company.Id}/auto-assign",
+            new { enabled = true }, token, company.Version);
+        var portal = await CreatePublishedPackageAsync(admin, token, "Client Portal onboarding", "Project", projectId);
+
+        var hire = await CreateEmployeeAsync(admin, token, "NEW-3", "portal.hire@integration.local");
+        await SendAsync(admin, HttpMethod.Put, $"/api/v1/employees/{hire.Id}/employment",
+            new { status = "Active", startDate = "2026-11-10", endDate = (string?)null }, token);
+        await SendAsync(admin, HttpMethod.Post, $"/api/v1/projects/{projectId}/members", new
+        {
+            employeeId = hire.Id, projectRole = "Developer", responsibilities = "Build features",
+            effectiveFrom = "2026-11-10", effectiveTo = (string?)null
+        }, token);
+
+        // The not-yet-started company journey is replaced by one combined company + project journey.
+        var hireJourneys = await ActiveJourneysAsync(admin, hire.Id);
+        var combined = Assert.Single(hireJourneys);
+        Assert.Equal(company.Id, combined.GetProperty("templateId").GetGuid());
+        Assert.Equal(portal.Id, combined.GetProperty("projectTemplateId").GetGuid());
+        Assert.Equal(lead.Id, combined.GetProperty("mentorEmployeeId").GetGuid());
+        Assert.Equal(2, combined.GetProperty("steps").GetArrayLength());
+
+        await SendAsync(admin, HttpMethod.Post, $"/api/v1/projects/{projectId}/members", new
+        {
+            employeeId = existing.Id, projectRole = "Tester", responsibilities = "Test features",
+            effectiveFrom = "2026-11-10", effectiveTo = (string?)null
+        }, token);
+
+        // Someone without a combinable journey gets the project package as its own journey.
+        var separate = Assert.Single(await ActiveJourneysAsync(admin, existing.Id));
+        Assert.Equal(portal.Id, separate.GetProperty("templateId").GetGuid());
+        Assert.Equal(projectId, separate.GetProperty("projectId").GetGuid());
+    }
+
+    private static async Task<JsonElement[]> ActiveJourneysAsync(HttpClient client, Guid employeeId)
+    {
+        var assignments = await ReadJsonAsync(await client.GetAsync($"/api/v1/onboarding/assignments?employeeId={employeeId}"));
+        return assignments.EnumerateArray().Where(x => x.GetProperty("status").GetString() != "Superseded").ToArray();
+    }
+
+    private static async Task<(Guid Id, long Version)> CreatePublishedPackageAsync(HttpClient client, string token, string name, string kind, Guid? projectId)
+    {
+        var created = await ReadJsonAsync(await SendAsync(client, HttpMethod.Post, "/api/v1/onboarding/templates", new
+        {
+            name, description = $"{name} package", durationDays = 30, kind, projectId,
+            steps = new[]
+            {
+                new { sectionTitle = name, sectionOrder = 0, title = $"{name} kickoff", instructions = "Attend the kickoff",
+                    expectedOutcome = "Know the basics", stepType = "PracticalTask", stepOrder = 0, dueAfterDays = 1, isRequired = true }
+            }
+        }, token));
+        var id = created.GetProperty("id").GetGuid();
+        var published = await ReadJsonAsync(await SendWithEtagAsync(client, HttpMethod.Post, $"/api/v1/onboarding/templates/{id}/publish",
+            new { }, token, created.GetProperty("version").GetInt64()));
+        return (id, published.GetProperty("version").GetInt64());
+    }
+
+    [Fact]
     public async Task Background_job_identity_carries_only_organization_and_requesting_user()
     {
         await using var scope = _factory!.Services.CreateAsyncScope();

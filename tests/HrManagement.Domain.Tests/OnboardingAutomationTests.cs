@@ -81,4 +81,18 @@ public sealed class OnboardingAutomationTests
         company.Retire(Now);
         Assert.False(company.AutoAssignToNewEmployees);
     }
+
+    [Fact]
+    public void Only_a_journey_that_has_not_started_can_be_superseded()
+    {
+        var assignment = OnboardingAssignment.Create(OrganizationId, Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1,
+            null, null, null, new DateOnly(2026, 11, 10));
+        assignment.Supersede(Now);
+        Assert.Equal(OnboardingAssignmentStatus.Superseded, assignment.Status);
+
+        var started = OnboardingAssignment.Create(OrganizationId, Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1,
+            null, null, null, new DateOnly(2026, 11, 10));
+        started.RefreshStatus(true, false, false, false, Now);
+        Assert.Throws<DomainException>(() => started.Supersede(Now));
+    }
 }

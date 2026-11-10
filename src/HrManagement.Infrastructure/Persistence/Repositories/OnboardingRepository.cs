@@ -172,6 +172,17 @@ internal sealed class OnboardingRepository(AppDbContext db, ICurrentUserService 
         db.OnboardingAssignments.AnyAsync(x => x.OrganizationId == OrganizationId && x.EmployeeId == employeeId &&
             x.Status != OnboardingAssignmentStatus.Cancelled && x.Status != OnboardingAssignmentStatus.Superseded, cancellationToken);
 
+    public Task<bool> HasJourneyWithPackageAsync(Guid employeeId, Guid templateId, CancellationToken cancellationToken) =>
+        db.OnboardingAssignments.AnyAsync(x => x.OrganizationId == OrganizationId && x.EmployeeId == employeeId &&
+            (x.TemplateId == templateId || x.ProjectTemplateId == templateId) &&
+            x.Status != OnboardingAssignmentStatus.Cancelled && x.Status != OnboardingAssignmentStatus.Superseded, cancellationToken);
+
+    public async Task<IReadOnlyList<OnboardingAssignment>> GetOpenAssignmentsAsync(Guid employeeId, CancellationToken cancellationToken) =>
+        await db.OnboardingAssignments.Where(x => x.OrganizationId == OrganizationId && x.EmployeeId == employeeId &&
+                x.Status != OnboardingAssignmentStatus.Completed && x.Status != OnboardingAssignmentStatus.Cancelled &&
+                x.Status != OnboardingAssignmentStatus.Superseded)
+            .OrderBy(x => x.CreatedAtUtc).ToListAsync(cancellationToken);
+
     public Task<Guid?> GetCurrentManagerIdAsync(Guid employeeId, DateOnly asOf, CancellationToken cancellationToken) =>
         db.ReportingLines.Where(x => x.OrganizationId == OrganizationId && x.EmployeeId == employeeId &&
                 x.EffectiveFrom <= asOf && (x.EffectiveTo == null || x.EffectiveTo >= asOf))

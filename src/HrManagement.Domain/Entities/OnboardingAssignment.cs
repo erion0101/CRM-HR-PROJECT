@@ -108,6 +108,15 @@ public sealed class OnboardingAssignment : Entity
         Touch(now);
     }
 
+    /// <summary>Replaced by a new journey before the employee started (for example, after joining a project).</summary>
+    public void Supersede(DateTimeOffset now)
+    {
+        if (Status != OnboardingAssignmentStatus.NotStarted)
+            throw new DomainException("Only an onboarding journey that has not started can be replaced.");
+        Status = OnboardingAssignmentStatus.Superseded;
+        Touch(now);
+    }
+
     public void Cancel(string reason, DateTimeOffset now)
     {
         if (Status == OnboardingAssignmentStatus.Completed) throw new DomainException("A completed onboarding journey cannot be cancelled.");

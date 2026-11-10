@@ -46,6 +46,10 @@ public interface IOnboardingRepository
     Task<IReadOnlyList<OnboardingTemplate>> GetAutoAssignPackagesAsync(CancellationToken cancellationToken);
     /// <summary>True when the employee has any journey that is not cancelled or superseded.</summary>
     Task<bool> HasOpenAssignmentAsync(Guid employeeId, CancellationToken cancellationToken);
+    /// <summary>True when any non-cancelled, non-superseded journey (including completed ones) contains the package.</summary>
+    Task<bool> HasJourneyWithPackageAsync(Guid employeeId, Guid templateId, CancellationToken cancellationToken);
+    /// <summary>Tracked journeys that are not completed, cancelled, or superseded.</summary>
+    Task<IReadOnlyList<OnboardingAssignment>> GetOpenAssignmentsAsync(Guid employeeId, CancellationToken cancellationToken);
     Task<Guid?> GetCurrentManagerIdAsync(Guid employeeId, DateOnly asOf, CancellationToken cancellationToken);
     Task<int> GetNextQuizVersionAsync(Guid templateVersionId, CancellationToken cancellationToken);
     Task<OnboardingQuizAdminDto?> GetQuizAdminDtoAsync(Guid quizId, CancellationToken cancellationToken);

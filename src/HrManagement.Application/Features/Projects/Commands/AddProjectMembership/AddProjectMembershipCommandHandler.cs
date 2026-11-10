@@ -1,11 +1,13 @@
 using HrManagement.Application.Common.Exceptions;
 using HrManagement.Application.Common.Interfaces;
 using HrManagement.Application.Common.Messaging;
+using HrManagement.Application.Features.Projects.Events;
 using HrManagement.Domain;
+using MediatR;
 
 namespace HrManagement.Application.Features.Projects.Commands.AddProjectMembership;
 
-public sealed class AddProjectMembershipCommandHandler(IProjectRepository repository, IUnitOfWork unitOfWork)
+public sealed class AddProjectMembershipCommandHandler(IProjectRepository repository, IUnitOfWork unitOfWork, IPublisher publisher)
     : ICommandHandler<AddProjectMembershipCommand, ProjectDto>
 {
     public async Task<ProjectDto> Handle(AddProjectMembershipCommand request, CancellationToken cancellationToken)
@@ -18,6 +20,9 @@ public sealed class AddProjectMembershipCommandHandler(IProjectRepository reposi
         repository.Add(ProjectMembership.Create(project.OrganizationId, project.Id, request.EmployeeId, request.ProjectRole,
             request.Responsibilities, request.EffectiveFrom, request.EffectiveTo));
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        // Published after the membership is saved, so a subscriber's failure cannot roll it back.
+        await publisher.Publish(new ProjectMembershipAddedNotification(project.OrganizationId, project.Id, request.EmployeeId,
+            request.EffectiveFrom), cancellationToken);
         return await repository.GetVisibleAsync(project.Id, cancellationToken) ?? throw new InvalidOperationException("Updated project was not available.");
     }
 }
