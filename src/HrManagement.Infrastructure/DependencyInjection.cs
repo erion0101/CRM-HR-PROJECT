@@ -97,6 +97,8 @@ public static class DependencyInjection
         services.AddScoped<IKnowledgeRepository, KnowledgeRepository>();
         services.AddScoped<IProjectRepository, ProjectRepository>();
         services.AddScoped<IOnboardingRepository, OnboardingRepository>();
+        services.AddScoped<HrManagement.Application.Features.Notifications.INotificationRepository, NotificationRepository>();
+        services.AddScoped<IOnboardingOverdueReminderProcessor, OnboardingOverdueReminderProcessor>();
         services.AddScoped<HrManagement.Application.Features.Onboarding.Insights.IOnboardingInsightsReader, OnboardingInsightsReader>();
         services.AddScoped<IAiDataReader, AiDataReader>();
         services.AddScoped<IAiAuthorizationService, AiAuthorizationService>();

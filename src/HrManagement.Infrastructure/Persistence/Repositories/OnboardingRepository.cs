@@ -183,6 +183,10 @@ internal sealed class OnboardingRepository(AppDbContext db, ICurrentUserService 
                 x.Status != OnboardingAssignmentStatus.Superseded)
             .OrderBy(x => x.CreatedAtUtc).ToListAsync(cancellationToken);
 
+    public Task<string?> GetEmployeeNameAsync(Guid employeeId, CancellationToken cancellationToken) =>
+        db.Employees.Where(x => x.OrganizationId == OrganizationId && x.Id == employeeId)
+            .Select(x => x.FirstName + " " + x.LastName).SingleOrDefaultAsync(cancellationToken);
+
     public Task<Guid?> GetCurrentManagerIdAsync(Guid employeeId, DateOnly asOf, CancellationToken cancellationToken) =>
         db.ReportingLines.Where(x => x.OrganizationId == OrganizationId && x.EmployeeId == employeeId &&
                 x.EffectiveFrom <= asOf && (x.EffectiveTo == null || x.EffectiveTo >= asOf))

@@ -52,6 +52,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<OnboardingQuizAttempt> OnboardingQuizAttempts => Set<OnboardingQuizAttempt>();
     public DbSet<OnboardingQuizAttemptQuestion> OnboardingQuizAttemptQuestions => Set<OnboardingQuizAttemptQuestion>();
     public DbSet<OnboardingQuizAnswer> OnboardingQuizAnswers => Set<OnboardingQuizAnswer>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

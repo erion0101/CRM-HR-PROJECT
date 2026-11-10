@@ -1,12 +1,13 @@
 using HrManagement.Application.Common.Exceptions;
 using HrManagement.Application.Common.Interfaces;
 using HrManagement.Application.Common.Messaging;
+using HrManagement.Application.Features.Notifications;
 using HrManagement.Domain;
 
 namespace HrManagement.Application.Features.Onboarding.Commands.SubmitQuizAttempt;
 
 public sealed class SubmitQuizAttemptCommandHandler(IOnboardingRepository repository, ICurrentUserService currentUser,
-    IUnitOfWork unitOfWork, IAuditWriter audit) : ICommandHandler<SubmitQuizAttemptCommand, OnboardingQuizResultDto>
+    IUnitOfWork unitOfWork, IAuditWriter audit, INotificationRepository notifications) : ICommandHandler<SubmitQuizAttemptCommand, OnboardingQuizResultDto>
 {
     public async Task<OnboardingQuizResultDto> Handle(SubmitQuizAttemptCommand request, CancellationToken cancellationToken)
     {
@@ -62,7 +63,8 @@ public sealed class SubmitQuizAttemptCommandHandler(IOnboardingRepository reposi
             cycle.Pass(now);
             assignment.PassAssessment(now);
             var steps = await repository.GetStepsAsync(assignment.Id, cancellationToken);
-            Commands.UpdateOnboardingStep.UpdateOnboardingStepCommandHandler.Refresh(assignment, steps, now);
+            if (Commands.UpdateOnboardingStep.UpdateOnboardingStepCommandHandler.Refresh(assignment, steps, now))
+                await new OnboardingNotifier(notifications, repository).JourneyCompletedAsync(assignment, cancellationToken);
         }
         else
         {
@@ -75,6 +77,7 @@ public sealed class SubmitQuizAttemptCommandHandler(IOnboardingRepository reposi
                 now, cancellationToken, documentVersionSnapshot);
             assignment.RestartAssessment(nextCycle.Id, nextCycleNumber, now);
         }
+        await new OnboardingNotifier(notifications, repository).QuizSubmittedAsync(assignment, attempt, passed, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         await audit.RecordAccessAsync(passed ? "OnboardingQuizPassed" : "OnboardingQuizFailedAndReadingReset",
             nameof(OnboardingQuizAttempt), attempt.Id.ToString(), cancellationToken);

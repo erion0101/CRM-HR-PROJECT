@@ -50,6 +50,7 @@ public interface IOnboardingRepository
     Task<bool> HasJourneyWithPackageAsync(Guid employeeId, Guid templateId, CancellationToken cancellationToken);
     /// <summary>Tracked journeys that are not completed, cancelled, or superseded.</summary>
     Task<IReadOnlyList<OnboardingAssignment>> GetOpenAssignmentsAsync(Guid employeeId, CancellationToken cancellationToken);
+    Task<string?> GetEmployeeNameAsync(Guid employeeId, CancellationToken cancellationToken);
     Task<Guid?> GetCurrentManagerIdAsync(Guid employeeId, DateOnly asOf, CancellationToken cancellationToken);
     Task<int> GetNextQuizVersionAsync(Guid templateVersionId, CancellationToken cancellationToken);
     Task<OnboardingQuizAdminDto?> GetQuizAdminDtoAsync(Guid quizId, CancellationToken cancellationToken);

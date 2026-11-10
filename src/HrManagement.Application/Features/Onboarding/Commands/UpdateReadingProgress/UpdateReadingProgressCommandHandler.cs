@@ -1,12 +1,13 @@
 using HrManagement.Application.Common.Exceptions;
 using HrManagement.Application.Common.Interfaces;
 using HrManagement.Application.Common.Messaging;
+using HrManagement.Application.Features.Notifications;
 using HrManagement.Domain;
 
 namespace HrManagement.Application.Features.Onboarding.Commands.UpdateReadingProgress;
 
 public sealed class UpdateReadingProgressCommandHandler(IOnboardingRepository repository, ICurrentUserService currentUser,
-    IUnitOfWork unitOfWork) : ICommandHandler<UpdateReadingProgressCommand, OnboardingAssignmentDto>
+    INotificationRepository notifications, IUnitOfWork unitOfWork) : ICommandHandler<UpdateReadingProgressCommand, OnboardingAssignmentDto>
 {
     public async Task<OnboardingAssignmentDto> Handle(UpdateReadingProgressCommand request, CancellationToken cancellationToken)
     {
@@ -37,9 +38,13 @@ public sealed class UpdateReadingProgressCommandHandler(IOnboardingRepository re
         }
         var reading = await repository.GetReadingProgressesAsync(cycle.Id, cancellationToken);
         var requiredComplete = reading.Where(x => x.IsRequired).All(x => x.Status == OnboardingReadingStatus.Read);
+        var wasLocked = assignment.AssessmentStatus == OnboardingAssessmentStatus.Locked;
         assignment.RefreshAssessmentAvailability(requiredComplete, now);
+        var notifier = new OnboardingNotifier(notifications, repository);
+        if (wasLocked && assignment.AssessmentStatus == OnboardingAssessmentStatus.Available) notifier.QuizUnlocked(assignment);
         var steps = await repository.GetStepsAsync(assignment.Id, cancellationToken);
-        UpdateOnboardingStep.UpdateOnboardingStepCommandHandler.Refresh(assignment, steps, now);
+        if (UpdateOnboardingStep.UpdateOnboardingStepCommandHandler.Refresh(assignment, steps, now))
+            await notifier.JourneyCompletedAsync(assignment, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return await repository.GetAssignmentDtoAsync(assignment.Id, cancellationToken) ?? throw new InvalidOperationException("Updated journey was not available.");
     }

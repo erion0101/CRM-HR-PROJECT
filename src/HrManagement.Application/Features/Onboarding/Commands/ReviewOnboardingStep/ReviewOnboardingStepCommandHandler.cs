@@ -2,11 +2,13 @@ using HrManagement.Application.Common.Authorization;
 using HrManagement.Application.Common.Exceptions;
 using HrManagement.Application.Common.Interfaces;
 using HrManagement.Application.Common.Messaging;
+using HrManagement.Application.Features.Notifications;
 using HrManagement.Application.Features.Onboarding.Commands.UpdateOnboardingStep;
 
 namespace HrManagement.Application.Features.Onboarding.Commands.ReviewOnboardingStep;
 
-public sealed class ReviewOnboardingStepCommandHandler(IOnboardingRepository repository, IAuthorizedDataScope scope, ICurrentUserService currentUser, IUnitOfWork unitOfWork)
+public sealed class ReviewOnboardingStepCommandHandler(IOnboardingRepository repository, IAuthorizedDataScope scope, ICurrentUserService currentUser,
+    INotificationRepository notifications, IUnitOfWork unitOfWork)
     : ICommandHandler<ReviewOnboardingStepCommand, OnboardingAssignmentDto>
 {
     public async Task<OnboardingAssignmentDto> Handle(ReviewOnboardingStepCommand request, CancellationToken cancellationToken)
@@ -19,7 +21,8 @@ public sealed class ReviewOnboardingStepCommandHandler(IOnboardingRepository rep
         if (step.Version != request.ExpectedVersion) throw new ConflictException("The onboarding step was changed by another user.");
         step.Review(request.Approved, currentUser.UserId ?? throw new ForbiddenException(), request.ReviewNote, DateTimeOffset.UtcNow);
         var steps = await repository.GetStepsAsync(assignment.Id, cancellationToken);
-        UpdateOnboardingStepCommandHandler.Refresh(assignment, steps, DateTimeOffset.UtcNow);
+        if (UpdateOnboardingStepCommandHandler.Refresh(assignment, steps, DateTimeOffset.UtcNow))
+            await new OnboardingNotifier(notifications, repository).JourneyCompletedAsync(assignment, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return await repository.GetAssignmentDtoAsync(assignment.Id, cancellationToken) ?? throw new InvalidOperationException("Updated journey was not available.");
     }

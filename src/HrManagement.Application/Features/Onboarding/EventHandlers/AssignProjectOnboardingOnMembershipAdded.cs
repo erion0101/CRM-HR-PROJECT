@@ -1,4 +1,5 @@
 using HrManagement.Application.Common.Interfaces;
+using HrManagement.Application.Features.Notifications;
 using HrManagement.Application.Features.Projects;
 using HrManagement.Application.Features.Projects.Events;
 using HrManagement.Domain;
@@ -21,6 +22,7 @@ namespace HrManagement.Application.Features.Onboarding.EventHandlers;
 public sealed class AssignProjectOnboardingOnMembershipAdded(
     IOnboardingRepository repository,
     IProjectRepository projects,
+    INotificationRepository notifications,
     IUnitOfWork unitOfWork,
     ILogger<AssignProjectOnboardingOnMembershipAdded> logger) : INotificationHandler<ProjectMembershipAddedNotification>
 {
@@ -46,7 +48,7 @@ public sealed class AssignProjectOnboardingOnMembershipAdded(
         var project = await projects.GetAsync(notification.ProjectId, cancellationToken);
         var mentorId = project?.OnboardingContactEmployeeId is { } contact && contact != notification.EmployeeId ? contact : (Guid?)null;
         var managerId = await repository.GetCurrentManagerIdAsync(notification.EmployeeId, notification.EffectiveFrom, cancellationToken);
-        var factory = new OnboardingJourneyFactory(repository, projects);
+        var factory = new OnboardingJourneyFactory(repository, projects, notifications);
 
         var notStarted = (await repository.GetOpenAssignmentsAsync(notification.EmployeeId, cancellationToken))
             .FirstOrDefault(x => x.Status == OnboardingAssignmentStatus.NotStarted && x.ProjectId is null && x.ProjectTemplateId is null);

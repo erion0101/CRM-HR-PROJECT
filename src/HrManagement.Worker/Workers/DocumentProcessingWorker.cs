@@ -15,6 +15,7 @@ public sealed class DocumentProcessingWorker(IServiceScopeFactory scopeFactory, 
                 count += await scope.ServiceProvider.GetRequiredService<HrManagement.Application.Features.Ai.IDocumentIndexingProcessor>().ProcessPendingAsync(stoppingToken);
                 count += await scope.ServiceProvider.GetRequiredService<HrManagement.Application.Features.Ai.IAiMaintenanceProcessor>().PurgeExpiredConversationsAsync(stoppingToken);
                 count += await scope.ServiceProvider.GetRequiredService<HrManagement.Application.Features.Onboarding.IOnboardingQuizGenerationProcessor>().ProcessPendingAsync(stoppingToken);
+                count += await scope.ServiceProvider.GetRequiredService<HrManagement.Application.Features.Onboarding.IOnboardingOverdueReminderProcessor>().ProcessAsync(stoppingToken);
                 await Task.Delay(count == 0 ? TimeSpan.FromSeconds(5) : TimeSpan.FromMilliseconds(250), stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }

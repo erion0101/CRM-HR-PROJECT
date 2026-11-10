@@ -1,4 +1,5 @@
 using HrManagement.Application.Common.Exceptions;
+using HrManagement.Application.Features.Notifications;
 using HrManagement.Application.Features.Projects;
 using HrManagement.Domain;
 
@@ -18,7 +19,8 @@ public sealed record OnboardingJourneyRequest(
 /// Callers are responsible for authorization and for saving the unit of work. This is shared by the HR assignment
 /// command and by automatic assignment triggered from employment and project-membership events.
 /// </summary>
-internal sealed class OnboardingJourneyFactory(IOnboardingRepository repository, IProjectRepository projects)
+internal sealed class OnboardingJourneyFactory(IOnboardingRepository repository, IProjectRepository projects,
+    INotificationRepository notifications)
 {
     public async Task<OnboardingAssignment> CreateAsync(Guid organizationId, OnboardingJourneyRequest request,
         CancellationToken cancellationToken, OnboardingAssignment? replaces = null)
@@ -57,12 +59,15 @@ internal sealed class OnboardingJourneyFactory(IOnboardingRepository repository,
                 sectionOffset, progressSteps, cancellationToken);
         }
 
+        var notifier = new OnboardingNotifier(notifications, repository);
+        notifier.JourneyAssigned(assignment, template.Name);
         var quizzes = await repository.GetPublishedQuizzesAsync(assignment.PackageVersionIds, cancellationToken);
         if (quizzes.Count > 0)
         {
             var cycle = await OnboardingReadingCycleFactory.CreateAsync(repository, assignment, progressSteps, 1, DateTimeOffset.UtcNow, cancellationToken);
             assignment.ConfigureAssessment(cycle.Id, 1,
                 progressSteps.Where(OnboardingReadingCycleFactory.IsReadingStep).All(x => !x.IsRequired), DateTimeOffset.UtcNow);
+            if (assignment.AssessmentStatus == OnboardingAssessmentStatus.Available) notifier.QuizUnlocked(assignment);
         }
         return assignment;
     }

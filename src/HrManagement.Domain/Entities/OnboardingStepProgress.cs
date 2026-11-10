@@ -21,6 +21,8 @@ public sealed class OnboardingStepProgress : Entity
     public string? ExternalUrl { get; private set; }
     public Guid? DependsOnTemplateStepId { get; private set; }
     public int? MinimumReadingMinutes { get; private set; }
+    /// <summary>Set once an overdue reminder was sent, so each step is reminded at most once.</summary>
+    public DateTimeOffset? OverdueNotifiedAtUtc { get; private set; }
     public OnboardingStepStatus Status { get; private set; } = OnboardingStepStatus.NotStarted;
     public string? CompletionNote { get; private set; }
     public Guid? CompletedByUserId { get; private set; }
@@ -74,6 +76,12 @@ public sealed class OnboardingStepProgress : Entity
         ReviewedByUserId = reviewerUserId;
         ReviewedAtUtc = now.ToUniversalTime();
         ReviewNote = string.IsNullOrWhiteSpace(note) ? null : Guard.Required(note, nameof(note), 2_000);
+        Touch(now);
+    }
+
+    public void MarkOverdueNotified(DateTimeOffset now)
+    {
+        OverdueNotifiedAtUtc ??= now.ToUniversalTime();
         Touch(now);
     }
 

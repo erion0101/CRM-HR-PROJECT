@@ -81,7 +81,21 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .app-frame { grid-column: 2; min-width: 0; }
 .topbar { position: sticky; top: 0; z-index: 25; height: 72px; padding: 0 34px; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.9); backdrop-filter: blur(14px); }
 .mobile-menu { display: none; border: 0; background: transparent; color: var(--ink); }
-.topbar__profile { position: relative; margin-left: auto; }
+.topbar__profile { position: relative; }
+.notification-bell { position: relative; margin-left: auto; }
+.notification-bell__trigger { position: relative; width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); cursor: pointer; }
+.notification-bell__trigger:focus-visible { outline: 2px solid var(--forest-600); outline-offset: 2px; }
+.notification-bell__count { position: absolute; top: -6px; right: -6px; min-width: 19px; height: 19px; padding: 0 5px; display: grid; place-items: center; border: 2px solid var(--surface); border-radius: 99px; background: #b34d43; color: #fff; font-size: 10px; font-weight: 700; }
+.notification-bell__panel { position: absolute; right: 0; top: calc(100% + 12px); width: min(360px, calc(100vw - 32px)); max-height: 440px; overflow: auto; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); box-shadow: 0 20px 45px rgba(20,48,42,.16); z-index: 30; }
+.notification-bell__panel header { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid #edf0ee; background: var(--surface); }
+.notification-bell__panel ul { list-style: none; margin: 0; padding: 6px; }
+.notification-bell__link { border: 0; background: none; color: var(--forest-700); font-weight: 600; cursor: pointer; }
+.notification-bell__empty { margin: 0; padding: 24px 14px; color: var(--muted); text-align: center; }
+.notification-item { width: 100%; display: grid; gap: 3px; padding: 10px 12px 10px 16px; border: 0; border-radius: 10px; background: none; color: var(--ink); text-align: left; cursor: pointer; position: relative; }
+.notification-item:hover, .notification-item:focus-visible { background: var(--forest-50); }
+.notification-item span { color: var(--muted); font-size: 13px; }
+.notification-item small { color: var(--muted); font-size: 11px; }
+.notification-item.is-unread::before { content: ''; position: absolute; left: 5px; top: 16px; width: 6px; height: 6px; border-radius: 50%; background: var(--forest-600); }
 .profile-trigger { border: 0; background: transparent; display: flex; align-items: center; gap: 10px; cursor: pointer; color: var(--ink); text-align: left; }
 .profile-trigger > span:nth-child(2) { display: flex; flex-direction: column; max-width: 170px; }
 .profile-trigger strong { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

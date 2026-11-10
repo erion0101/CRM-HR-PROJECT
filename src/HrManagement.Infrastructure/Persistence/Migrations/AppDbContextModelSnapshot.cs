@@ -1217,6 +1217,60 @@ namespace HrManagement.Infrastructure.Persistence.Migrations
                     b.ToTable("KnowledgeArticleRevisions");
                 });
 
+            modelBuilder.Entity("HrManagement.Domain.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LinkPath")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ReadAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("RecipientEmployeeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("RecipientEmployeeId");
+
+                    b.HasIndex("OrganizationId", "RecipientEmployeeId", "CreatedAtUtc");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("HrManagement.Domain.OnboardingAcknowledgment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1927,6 +1981,9 @@ namespace HrManagement.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("OverdueNotifiedAtUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ReviewNote")
                         .HasMaxLength(2000)
@@ -2914,6 +2971,15 @@ namespace HrManagement.Infrastructure.Persistence.Migrations
                     b.HasOne("HrManagement.Domain.KnowledgeArticle", null)
                         .WithMany()
                         .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("HrManagement.Domain.Notification", b =>
+                {
+                    b.HasOne("HrManagement.Domain.Employee", null)
+                        .WithMany()
+                        .HasForeignKey("RecipientEmployeeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

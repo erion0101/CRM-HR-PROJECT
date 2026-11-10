@@ -677,6 +677,82 @@ public sealed class ApiAuthorizationTests : IAsyncLifetime
         Assert.Empty(insights.GetProperty("documentDifficulty").EnumerateArray());
     }
 
+    [Fact]
+    public async Task Onboarding_events_notify_the_employee_and_their_reviewer_privately()
+    {
+        using var admin = Client();
+        var token = await LoginAsync(admin, AdminEmail, AdminPassword);
+        var package = await CreatePublishedPackageAsync(admin, token, "Company onboarding", "Company", null);
+        var newcomer = await CreateEmployeeAsync(admin, token, "NOTE-1", "newcomer@integration.local");
+        var reviewer = await CreateEmployeeAsync(admin, token, "NOTE-2", "reviewer@integration.local");
+        await CreateUserAsync(admin, token, "newcomer.user@integration.local", "Newcomer-Password-123!", "Employee", newcomer.Id);
+        await CreateUserAsync(admin, token, "reviewer.user@integration.local", "Reviewer-Password-123!", "Manager", reviewer.Id);
+        await SendAsync(admin, HttpMethod.Post, "/api/v1/onboarding/assignments", new
+        {
+            employeeId = newcomer.Id, templateId = package.Id, projectId = (Guid?)null, managerEmployeeId = reviewer.Id,
+            mentorEmployeeId = (Guid?)null, startDate = DateOnly.FromDateTime(DateTime.UtcNow).ToString("yyyy-MM-dd")
+        }, token);
+
+        using var employee = Client();
+        var employeeToken = await LoginAsync(employee, "newcomer.user@integration.local", "Newcomer-Password-123!");
+        var assigned = await ReadJsonAsync(await employee.GetAsync("/api/v1/notifications"));
+        Assert.Equal(1, assigned.GetProperty("unreadCount").GetInt32());
+        Assert.Equal("JourneyAssigned", assigned.GetProperty("items")[0].GetProperty("type").GetString());
+
+        // Completing the only required step completes the journey.
+        var journey = (await ReadJsonAsync(await employee.GetAsync("/api/v1/onboarding/me"))).GetProperty("journeys")[0];
+        var step = journey.GetProperty("steps")[0];
+        await SendWithEtagAsync(employee, HttpMethod.Put,
+            $"/api/v1/onboarding/assignments/{journey.GetProperty("id").GetGuid()}/steps/{step.GetProperty("id").GetGuid()}",
+            new { status = "Completed", completionNote = (string?)null }, employeeToken, step.GetProperty("version").GetInt64());
+
+        var mine = await ReadJsonAsync(await employee.GetAsync("/api/v1/notifications"));
+        Assert.Equal(2, mine.GetProperty("unreadCount").GetInt32());
+        Assert.Equal("JourneyCompleted", mine.GetProperty("items")[0].GetProperty("type").GetString());
+
+        using var manager = Client();
+        var managerToken = await LoginAsync(manager, "reviewer.user@integration.local", "Reviewer-Password-123!");
+        var managerNotes = await ReadJsonAsync(await manager.GetAsync("/api/v1/notifications"));
+        var completed = Assert.Single(managerNotes.GetProperty("items").EnumerateArray());
+        Assert.Equal("JourneyCompleted", completed.GetProperty("type").GetString());
+        Assert.Contains("NOTE-1", completed.GetProperty("title").GetString());
+
+        // Someone else's notification is invisible, even by id.
+        var othersId = mine.GetProperty("items")[0].GetProperty("id").GetGuid();
+        var forbidden = await SendAsync(manager, HttpMethod.Post, $"/api/v1/notifications/{othersId}/read", new { }, managerToken, ensureSuccess: false);
+        Assert.Equal(HttpStatusCode.NotFound, forbidden.StatusCode);
+
+        await SendAsync(employee, HttpMethod.Post, "/api/v1/notifications/read-all", new { }, employeeToken);
+        Assert.Equal(0, (await ReadJsonAsync(await employee.GetAsync("/api/v1/notifications"))).GetProperty("unreadCount").GetInt32());
+    }
+
+    [Fact]
+    public async Task Overdue_steps_are_reminded_once_to_employee_and_reviewer()
+    {
+        using var admin = Client();
+        var token = await LoginAsync(admin, AdminEmail, AdminPassword);
+        var package = await CreatePublishedPackageAsync(admin, token, "Company onboarding", "Company", null);
+        var late = await CreateEmployeeAsync(admin, token, "DUE-1", "late.person@integration.local");
+        var reviewer = await CreateEmployeeAsync(admin, token, "DUE-2", "due.reviewer@integration.local");
+        await SendAsync(admin, HttpMethod.Post, "/api/v1/onboarding/assignments", new
+        {
+            employeeId = late.Id, templateId = package.Id, projectId = (Guid?)null, managerEmployeeId = reviewer.Id,
+            mentorEmployeeId = (Guid?)null, startDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-10).ToString("yyyy-MM-dd")
+        }, token);
+
+        await using (var scope = _factory!.Services.CreateAsyncScope())
+            Assert.Equal(1, await scope.ServiceProvider.GetRequiredService<HrManagement.Application.Features.Onboarding.IOnboardingOverdueReminderProcessor>()
+                .ProcessAsync(CancellationToken.None));
+
+        await using var check = _factory.Services.CreateAsyncScope();
+        var db = check.ServiceProvider.GetRequiredService<AppDbContext>();
+        var reminders = await db.Notifications.Where(x => x.Type == NotificationType.StepOverdue).ToListAsync();
+        Assert.Equal(2, reminders.Count);
+        Assert.Contains(reminders, x => x.RecipientEmployeeId == late.Id && x.LinkPath == "/onboarding");
+        Assert.Contains(reminders, x => x.RecipientEmployeeId == reviewer.Id && x.Title.Contains("DUE-1"));
+        Assert.All(await db.OnboardingStepProgresses.ToListAsync(), step => Assert.NotNull(step.OverdueNotifiedAtUtc));
+    }
+
     private static async Task<JsonElement[]> ActiveJourneysAsync(HttpClient client, Guid employeeId)
     {
         var assignments = await ReadJsonAsync(await client.GetAsync($"/api/v1/onboarding/assignments?employeeId={employeeId}"));

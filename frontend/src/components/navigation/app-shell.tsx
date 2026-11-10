@@ -5,6 +5,7 @@ import { NavLink, Outlet, useLocation } from 'react-router';
 import { canManageUsers, canViewAudit, canViewCompanyWorkspace, roleLabels } from '@/app/access';
 import { Avatar } from '@/components/ui/avatar';
 import { useAuth } from '@/features/auth/hooks/use-auth';
+import { NotificationBell } from '@/features/notifications/components/notification-bell';
 
 interface NavigationItem {
   label: string;
@@ -60,6 +61,7 @@ export function AppShell() {
       <div className="app-frame">
         <header className="topbar">
           <button className="mobile-menu" onClick={() => setMobileOpen(true)} aria-label="Open navigation"><Menu size={21} /></button>
+          <NotificationBell />
           <div className="topbar__profile">
             <button className="profile-trigger" onClick={() => setProfileOpen((value) => !value)} aria-expanded={profileOpen}><Avatar name={user?.email ?? ''} size="small" /><span><strong>{user?.email.split('@')[0]}</strong><small>{user?.roles[0] ? roleLabels[user.roles[0]] : 'Team member'}</small></span><ChevronDown size={16} /></button>
             {profileOpen ? <div className="profile-menu"><div><strong>{user?.email}</strong><small>{user?.roles.map((role) => roleLabels[role]).join(' · ')}</small></div><NavLink to="/account/security" onClick={() => setProfileOpen(false)}><Settings2 size={16} /> Security settings</NavLink><button onClick={() => void logout()}><LogOut size={16} /> Sign out</button></div> : null}
