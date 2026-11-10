@@ -1,4 +1,13 @@
-export type AiResultType = 'Text' | 'EmployeeList' | 'EmployeeDetails' | 'ContractList' | 'DocumentList' | 'OrganizationTree' | 'Clarification' | 'Unavailable' | 'Error';
+export type AiResultType =
+  | 'Text'
+  | 'EmployeeList'
+  | 'EmployeeDetails'
+  | 'ContractList'
+  | 'DocumentList'
+  | 'OrganizationTree'
+  | 'Clarification'
+  | 'Unavailable'
+  | 'Error';
 export type AiEvidenceStatus = 'VerifiedStructured' | 'DocumentDerived' | 'Mixed' | 'Conflict' | 'NotFound';
 
 export interface AiCapabilities {
@@ -21,7 +30,10 @@ export interface AiSource {
   url?: string;
 }
 
-export interface AiStructuredResult { type: AiResultType; items: unknown }
+export interface AiStructuredResult {
+  type: AiResultType;
+  items: unknown;
+}
 
 export interface AiMessageResponse {
   conversationId: string;
@@ -69,4 +81,9 @@ export interface AiSettings {
   monthlyBudgetUsd: number;
 }
 
-export interface AiUsageSummary { requestsToday: number; inputTokensToday: number; outputTokensToday: number; costThisMonthUsd: number }
+export interface AiUsageSummary {
+  requestsToday: number;
+  inputTokensToday: number;
+  outputTokensToday: number;
+  costThisMonthUsd: number;
+}

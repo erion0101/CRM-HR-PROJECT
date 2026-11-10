@@ -5,7 +5,9 @@ const reloadKey = 'hr-management:dynamic-import-reload';
 export function isChunkLoadError(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
 
-  return /failed to fetch dynamically imported module|importing a module script failed|chunkloaderror|loading chunk .* failed/i.test(message);
+  return /failed to fetch dynamically imported module|importing a module script failed|chunkloaderror|loading chunk .* failed/i.test(
+    message
+  );
 }
 
 function hasAlreadyReloaded(): boolean {

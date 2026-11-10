@@ -12,9 +12,18 @@ interface FieldShellProps {
 export function FieldShell({ label, htmlFor, error, hint, required, children }: FieldShellProps) {
   return (
     <div className={`field ${error ? 'field--error' : ''}`}>
-      <label htmlFor={htmlFor}>{label}{required ? <span aria-hidden="true"> *</span> : null}</label>
+      <label htmlFor={htmlFor}>
+        {label}
+        {required ? <span aria-hidden="true"> *</span> : null}
+      </label>
       {children}
-      {error ? <p className="field__message" role="alert">{error}</p> : hint ? <p className="field__hint">{hint}</p> : null}
+      {error ? (
+        <p className="field__message" role="alert">
+          {error}
+        </p>
+      ) : hint ? (
+        <p className="field__hint">{hint}</p>
+      ) : null}
     </div>
   );
 }

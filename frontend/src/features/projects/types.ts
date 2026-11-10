@@ -11,9 +11,20 @@ export interface ProjectMember {
   version: number;
 }
 
-export interface ProjectResourceLink { id: string; label: string; url: string; resourceType: string; sortOrder: number }
+export interface ProjectResourceLink {
+  id: string;
+  label: string;
+  url: string;
+  resourceType: string;
+  sortOrder: number;
+}
 
-export interface ProjectEmployeeOption { id: string; employeeNumber: string; fullName: string; workEmail: string }
+export interface ProjectEmployeeOption {
+  id: string;
+  employeeNumber: string;
+  fullName: string;
+  workEmail: string;
+}
 
 export interface Project {
   id: string;

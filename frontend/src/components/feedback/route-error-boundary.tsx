@@ -10,7 +10,9 @@ export function RouteErrorBoundary() {
   return (
     <main className="route-error-page">
       <div className="full-state" role="alert">
-        <span><TriangleAlert size={30} aria-hidden="true" /></span>
+        <span>
+          <TriangleAlert size={30} aria-hidden="true" />
+        </span>
         <h1>{isStaleApplication ? 'Application update available' : 'We could not open this page'}</h1>
         <p>
           {isStaleApplication
@@ -18,10 +20,16 @@ export function RouteErrorBoundary() {
             : 'An unexpected error occurred. Reload the application and try again.'}
         </p>
         <div className="route-error-page__actions">
-          <button className="button button--primary button--medium" type="button" onClick={() => window.location.reload()}>
+          <button
+            className="button button--primary button--medium"
+            type="button"
+            onClick={() => window.location.reload()}
+          >
             <RefreshCw size={16} aria-hidden="true" /> Reload application
           </button>
-          <a className="button button--secondary button--medium" href="/">Return to overview</a>
+          <a className="button button--secondary button--medium" href="/">
+            Return to overview
+          </a>
         </div>
       </div>
     </main>

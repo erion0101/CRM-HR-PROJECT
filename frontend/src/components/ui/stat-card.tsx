@@ -13,8 +13,14 @@ interface StatCardProps {
 export function StatCard({ label, value, helper, icon: Icon, tone = 'green' }: StatCardProps) {
   return (
     <Card className="stat-card">
-      <span className={`stat-card__icon stat-card__icon--${tone}`}><Icon size={20} /></span>
-      <div><p>{label}</p><strong>{value}</strong><small>{helper}</small></div>
+      <span className={`stat-card__icon stat-card__icon--${tone}`}>
+        <Icon size={20} />
+      </span>
+      <div>
+        <p>{label}</p>
+        <strong>{value}</strong>
+        <small>{helper}</small>
+      </div>
     </Card>
   );
 }

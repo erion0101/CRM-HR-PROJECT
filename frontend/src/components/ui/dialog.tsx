@@ -12,13 +12,23 @@ interface DialogProps {
   width?: 'medium' | 'large' | 'wide';
 }
 
-export function Dialog({ open, title, description, onClose, footer, width = 'medium', children }: PropsWithChildren<DialogProps>) {
+export function Dialog({
+  open,
+  title,
+  description,
+  onClose,
+  footer,
+  width = 'medium',
+  children
+}: PropsWithChildren<DialogProps>) {
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
     panelRef.current?.focus();
-    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
     window.addEventListener('keydown', closeOnEscape);
     return () => window.removeEventListener('keydown', closeOnEscape);
   }, [onClose, open]);
@@ -26,11 +36,28 @@ export function Dialog({ open, title, description, onClose, footer, width = 'med
   if (!open) return null;
 
   return (
-    <div className="dialog-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <div className={`dialog dialog--${width}`} role="dialog" aria-modal="true" aria-labelledby="dialog-title" tabIndex={-1} ref={panelRef}>
+    <div
+      className="dialog-backdrop"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+        className={`dialog dialog--${width}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dialog-title"
+        tabIndex={-1}
+        ref={panelRef}
+      >
         <header className="dialog__header">
-          <div><h2 id="dialog-title">{title}</h2>{description ? <p>{description}</p> : null}</div>
-          <Button variant="ghost" size="small" onClick={onClose} aria-label="Close dialog"><X size={18} /></Button>
+          <div>
+            <h2 id="dialog-title">{title}</h2>
+            {description ? <p>{description}</p> : null}
+          </div>
+          <Button variant="ghost" size="small" onClick={onClose} aria-label="Close dialog">
+            <X size={18} />
+          </Button>
         </header>
         <div className="dialog__body">{children}</div>
         {footer ? <footer className="dialog__footer">{footer}</footer> : null}

@@ -1,7 +1,15 @@
 export type DocumentStatus = 'PendingScan' | 'Clean' | 'Rejected' | 'Archived';
 export type DocumentFolderScope = 'Global' | 'Employee';
 
-export interface EmployeeDocument { id: string; folderId: string | null; displayName: string; documentType: string; status: DocumentStatus; currentVersion: number; version: number }
+export interface EmployeeDocument {
+  id: string;
+  folderId: string | null;
+  displayName: string;
+  documentType: string;
+  status: DocumentStatus;
+  currentVersion: number;
+  version: number;
+}
 
 export interface DocumentFolder {
   id: string;

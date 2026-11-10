@@ -6,7 +6,7 @@ const items = [
   { label: 'Directory', to: '/employees', icon: Users, end: true },
   { label: 'Organization chart', to: '/organization-chart', icon: Network },
   { label: 'Department & team', to: '/departments', icon: Building2 },
-  { label: 'Positions', to: '/positions', icon: BriefcaseBusiness },
+  { label: 'Positions', to: '/positions', icon: BriefcaseBusiness }
 ];
 
 export function PeopleWorkspaceTabs() {

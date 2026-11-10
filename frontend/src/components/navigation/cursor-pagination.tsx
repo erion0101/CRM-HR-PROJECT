@@ -15,8 +15,12 @@ export function CursorPagination({ canPrevious, canNext, page, onPrevious, onNex
     <nav className="pagination" aria-label="Pagination">
       <span>Page {page}</span>
       <div>
-        <Button variant="secondary" size="small" disabled={!canPrevious} onClick={onPrevious}><ArrowLeft size={15} /> Previous</Button>
-        <Button variant="secondary" size="small" disabled={!canNext} onClick={onNext}>Next <ArrowRight size={15} /></Button>
+        <Button variant="secondary" size="small" disabled={!canPrevious} onClick={onPrevious}>
+          <ArrowLeft size={15} /> Previous
+        </Button>
+        <Button variant="secondary" size="small" disabled={!canNext} onClick={onNext}>
+          Next <ArrowRight size={15} />
+        </Button>
       </div>
     </nav>
   );

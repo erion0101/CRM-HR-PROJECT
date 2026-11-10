@@ -10,9 +10,14 @@ describe('toAppError', () => {
       status: 400,
       statusText: 'Bad Request',
       headers: {},
-      config: { headers: new axios.AxiosHeaders() },
+      config: { headers: new axios.AxiosHeaders() }
     });
-    expect(toAppError(error)).toEqual({ status: 400, message: 'Validation failed', fieldErrors: { workEmail: ['Email is already used.'] }, correlationId: 'corr-1' });
+    expect(toAppError(error)).toEqual({
+      status: 400,
+      message: 'Validation failed',
+      fieldErrors: { workEmail: ['Email is already used.'] },
+      correlationId: 'corr-1'
+    });
   });
 
   it('uses a safe message for unknown failures', () => {

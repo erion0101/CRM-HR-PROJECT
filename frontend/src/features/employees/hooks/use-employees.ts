@@ -1,6 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { getAssignmentHistory, getEmployee, getEmployeeActivity, getEmployeeProfile, getEmployees, getEmploymentHistory, getReportingLineHistory, type EmployeeFilters } from '../api/employees-api';
+import {
+  getAssignmentHistory,
+  getEmployee,
+  getEmployeeActivity,
+  getEmployeeProfile,
+  getEmployees,
+  getEmploymentHistory,
+  getReportingLineHistory,
+  type EmployeeFilters
+} from '../api/employees-api';
 
 export const employeeKeys = {
   all: ['employees'] as const,
@@ -10,7 +19,7 @@ export const employeeKeys = {
   employmentHistory: (id: string) => [...employeeKeys.all, 'employment-history', id] as const,
   assignmentHistory: (id: string) => [...employeeKeys.all, 'assignment-history', id] as const,
   reportingHistory: (id: string) => [...employeeKeys.all, 'reporting-history', id] as const,
-  activity: (id: string, cursor?: string) => [...employeeKeys.all, 'activity', id, { cursor }] as const,
+  activity: (id: string, cursor?: string) => [...employeeKeys.all, 'activity', id, { cursor }] as const
 };
 
 export function useEmployees(filters: EmployeeFilters = {}) {
@@ -26,17 +35,33 @@ export function useEmployeeProfile(id: string) {
 }
 
 export function useEmploymentHistory(id: string) {
-  return useQuery({ queryKey: employeeKeys.employmentHistory(id), queryFn: () => getEmploymentHistory(id), enabled: Boolean(id) });
+  return useQuery({
+    queryKey: employeeKeys.employmentHistory(id),
+    queryFn: () => getEmploymentHistory(id),
+    enabled: Boolean(id)
+  });
 }
 
 export function useAssignmentHistory(id: string) {
-  return useQuery({ queryKey: employeeKeys.assignmentHistory(id), queryFn: () => getAssignmentHistory(id), enabled: Boolean(id) });
+  return useQuery({
+    queryKey: employeeKeys.assignmentHistory(id),
+    queryFn: () => getAssignmentHistory(id),
+    enabled: Boolean(id)
+  });
 }
 
 export function useReportingLineHistory(id: string) {
-  return useQuery({ queryKey: employeeKeys.reportingHistory(id), queryFn: () => getReportingLineHistory(id), enabled: Boolean(id) });
+  return useQuery({
+    queryKey: employeeKeys.reportingHistory(id),
+    queryFn: () => getReportingLineHistory(id),
+    enabled: Boolean(id)
+  });
 }
 
 export function useEmployeeActivity(id: string, cursor?: string) {
-  return useQuery({ queryKey: employeeKeys.activity(id, cursor), queryFn: () => getEmployeeActivity(id, cursor), enabled: Boolean(id) });
+  return useQuery({
+    queryKey: employeeKeys.activity(id, cursor),
+    queryFn: () => getEmployeeActivity(id, cursor),
+    enabled: Boolean(id)
+  });
 }

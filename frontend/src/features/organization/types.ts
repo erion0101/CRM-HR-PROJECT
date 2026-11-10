@@ -45,6 +45,16 @@ export interface DepartmentOverview {
   employees: DepartmentEmployee[];
 }
 
-export interface Position { id: string; departmentId: string | null; title: string; code: string | null; version: number }
+export interface Position {
+  id: string;
+  departmentId: string | null;
+  title: string;
+  code: string | null;
+  version: number;
+}
 
-export interface PositionInput { departmentId: string; title: string; code?: string }
+export interface PositionInput {
+  departmentId: string;
+  title: string;
+  code?: string;
+}

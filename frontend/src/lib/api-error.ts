@@ -16,20 +16,21 @@ export function toAppError(error: unknown): AppError {
 
   const status = error.response?.status;
   const problem = error.response?.data;
-  const fallback = status === 401
-    ? 'Your session has ended. Please sign in again.'
-    : status === 403
-      ? 'You do not have permission to perform this action.'
-      : status === 404
-        ? 'The requested record could not be found.'
-        : status && status >= 500
-          ? 'The service is temporarily unavailable. Please try again.'
-          : 'Unable to complete the request. Please check the form and try again.';
+  const fallback =
+    status === 401
+      ? 'Your session has ended. Please sign in again.'
+      : status === 403
+        ? 'You do not have permission to perform this action.'
+        : status === 404
+          ? 'The requested record could not be found.'
+          : status && status >= 500
+            ? 'The service is temporarily unavailable. Please try again.'
+            : 'Unable to complete the request. Please check the form and try again.';
 
   return {
     status,
     message: problem?.detail || problem?.title || fallback,
     fieldErrors: problem?.errors ?? {},
-    correlationId: problem?.correlationId,
+    correlationId: problem?.correlationId
   };
 }

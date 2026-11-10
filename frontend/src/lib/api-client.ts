@@ -10,7 +10,7 @@ export const http = axios.create({
   baseURL: apiBaseUrl,
   timeout: 20_000,
   withCredentials: true,
-  headers: { Accept: 'application/json' },
+  headers: { Accept: 'application/json' }
 });
 
 http.interceptors.request.use(async (config) => {
@@ -27,7 +27,12 @@ http.interceptors.request.use(async (config) => {
 http.interceptors.response.use(
   (response) => response,
   async (error: unknown) => {
-    if (axios.isAxiosError(error) && error.response?.status === 400 && isAntiforgeryError(error.response.data) && error.config) {
+    if (
+      axios.isAxiosError(error) &&
+      error.response?.status === 400 &&
+      isAntiforgeryError(error.response.data) &&
+      error.config
+    ) {
       const request = error.config as InternalAxiosRequestConfig & { _csrfRetry?: boolean };
       if (!request._csrfRetry) {
         request._csrfRetry = true;
@@ -40,7 +45,7 @@ http.interceptors.response.use(
       window.dispatchEvent(new Event(unauthorizedEvent));
     }
     throw error;
-  },
+  }
 );
 
 export function clearAntiforgeryToken(): void {
@@ -56,11 +61,15 @@ export async function getAntiforgeryToken(): Promise<string> {
         antiforgeryToken = response.data.token;
         return response.data.token;
       })
-      .finally(() => { antiforgeryRequest = null; });
+      .finally(() => {
+        antiforgeryRequest = null;
+      });
   }
   return antiforgeryRequest;
 }
 
 function isAntiforgeryError(data: unknown): boolean {
-  return Boolean(data && typeof data === 'object' && 'title' in data && String(data.title).toLowerCase().includes('antiforgery'));
+  return Boolean(
+    data && typeof data === 'object' && 'title' in data && String(data.title).toLowerCase().includes('antiforgery')
+  );
 }

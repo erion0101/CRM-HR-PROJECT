@@ -4,7 +4,7 @@ export const roleLabels: Record<Role, string> = {
   Employee: 'Employee',
   Manager: 'Manager',
   HR: 'HR',
-  ProductManager: 'Product Manager',
+  ProductManager: 'Product Manager'
 };
 
 export function hasAnyRole(user: CurrentUser | null, roles: Role[]): boolean {

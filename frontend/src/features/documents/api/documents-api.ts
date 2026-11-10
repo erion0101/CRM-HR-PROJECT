@@ -15,13 +15,29 @@ function uploadBody(file: File, documentType: string, folderId?: string): FormDa
   return form;
 }
 
-export async function uploadDocument(employeeId: string, file: File, documentType: string, folderId?: string): Promise<EmployeeDocument> {
-  const { data } = await http.post<EmployeeDocument>(`/employees/${employeeId}/documents`, uploadBody(file, documentType, folderId));
+export async function uploadDocument(
+  employeeId: string,
+  file: File,
+  documentType: string,
+  folderId?: string
+): Promise<EmployeeDocument> {
+  const { data } = await http.post<EmployeeDocument>(
+    `/employees/${employeeId}/documents`,
+    uploadBody(file, documentType, folderId)
+  );
   return data;
 }
 
-export async function uploadDocumentVersion(employeeId: string, document: EmployeeDocument, file: File): Promise<EmployeeDocument> {
-  const { data } = await http.post<EmployeeDocument>(`/employees/${employeeId}/documents/${document.id}/versions`, uploadBody(file, document.documentType), { headers: { 'If-Match': `"${document.version}"` } });
+export async function uploadDocumentVersion(
+  employeeId: string,
+  document: EmployeeDocument,
+  file: File
+): Promise<EmployeeDocument> {
+  const { data } = await http.post<EmployeeDocument>(
+    `/employees/${employeeId}/documents/${document.id}/versions`,
+    uploadBody(file, document.documentType),
+    { headers: { 'If-Match': `"${document.version}"` } }
+  );
   return data;
 }
 
@@ -36,12 +52,16 @@ export async function downloadDocument(employeeId: string, document: EmployeeDoc
 }
 
 export async function getDocumentFile(employeeId: string, documentId: string): Promise<Blob> {
-  const response = await http.get<Blob>(`/employees/${employeeId}/documents/${documentId}/download`, { responseType: 'blob' });
+  const response = await http.get<Blob>(`/employees/${employeeId}/documents/${documentId}/download`, {
+    responseType: 'blob'
+  });
   return response.data;
 }
 
 export async function archiveDocument(employeeId: string, document: EmployeeDocument): Promise<void> {
-  await http.delete(`/employees/${employeeId}/documents/${document.id}`, { headers: { 'If-Match': `"${document.version}"` } });
+  await http.delete(`/employees/${employeeId}/documents/${document.id}`, {
+    headers: { 'If-Match': `"${document.version}"` }
+  });
 }
 
 export async function getDocumentFolders(): Promise<DocumentFolder[]> {

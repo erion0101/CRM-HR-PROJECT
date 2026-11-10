@@ -26,33 +26,47 @@ export function AuthProvider({ children }: PropsWithChildren) {
     queryKey: authKey,
     queryFn: getCurrentUser,
     retry: false,
-    staleTime: 60_000,
+    staleTime: 60_000
   });
   const loginMutation = useMutation({
     mutationFn: login,
-    onSuccess: async () => { await queryClient.invalidateQueries({ queryKey: authKey }); },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: authKey });
+    }
   });
   const logoutMutation = useMutation({
     mutationFn: logout,
-    onSettled: () => { queryClient.clear(); queryClient.setQueryData(authKey, null); },
+    onSettled: () => {
+      queryClient.clear();
+      queryClient.setQueryData(authKey, null);
+    }
   });
 
   useEffect(() => {
-    const clearSession = () => { queryClient.setQueryData(authKey, null); };
+    const clearSession = () => {
+      queryClient.setQueryData(authKey, null);
+    };
     window.addEventListener(unauthorizedEvent, clearSession);
     return () => window.removeEventListener(unauthorizedEvent, clearSession);
   }, []);
 
   const user = session.data ?? null;
-  const value = useMemo<AuthContextValue>(() => ({
-    user,
-    isCheckingSession: session.isLoading,
-    isAuthenticated: Boolean(user),
-    login: async (input) => { await loginMutation.mutateAsync(input); },
-    logout: async () => { await logoutMutation.mutateAsync(); },
-    isSigningIn: loginMutation.isPending,
-    hasRole: (...roles) => Boolean(user?.roles.some((role) => roles.includes(role))),
-  }), [loginMutation, logoutMutation, session.isLoading, user]);
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      user,
+      isCheckingSession: session.isLoading,
+      isAuthenticated: Boolean(user),
+      login: async (input) => {
+        await loginMutation.mutateAsync(input);
+      },
+      logout: async () => {
+        await logoutMutation.mutateAsync();
+      },
+      isSigningIn: loginMutation.isPending,
+      hasRole: (...roles) => Boolean(user?.roles.some((role) => roles.includes(role)))
+    }),
+    [loginMutation, logoutMutation, session.isLoading, user]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

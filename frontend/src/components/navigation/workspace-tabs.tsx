@@ -9,5 +9,14 @@ export interface WorkspaceTab {
 }
 
 export function WorkspaceTabs({ label, items }: { label: string; items: WorkspaceTab[] }) {
-  return <nav className="workspace-tabs" aria-label={label}>{items.map(({ label: itemLabel, to, icon: Icon, end }) => <NavLink key={to} to={to} end={end}><Icon size={17} /><span>{itemLabel}</span></NavLink>)}</nav>;
+  return (
+    <nav className="workspace-tabs" aria-label={label}>
+      {items.map(({ label: itemLabel, to, icon: Icon, end }) => (
+        <NavLink key={to} to={to} end={end}>
+          <Icon size={17} />
+          <span>{itemLabel}</span>
+        </NavLink>
+      ))}
+    </nav>
+  );
 }

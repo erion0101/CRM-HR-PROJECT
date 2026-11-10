@@ -10,7 +10,7 @@ describe('normalizeEmployeeInput', () => {
       lastName: 'Manager',
       workEmail: 'erion.manger@gmail.com',
       phone: '   ',
-      dateOfBirth: '',
+      dateOfBirth: ''
     });
 
     expect(result.phone).toBeUndefined();
@@ -24,7 +24,7 @@ describe('normalizeEmployeeInput', () => {
       lastName: 'Manager',
       workEmail: 'erion.manger@gmail.com',
       phone: ' +383 44 000 000 ',
-      dateOfBirth: '1990-01-15',
+      dateOfBirth: '1990-01-15'
     });
 
     expect(result.phone).toBe('+383 44 000 000');

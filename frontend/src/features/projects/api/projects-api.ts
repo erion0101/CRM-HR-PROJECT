@@ -21,7 +21,10 @@ export async function createProject(input: ProjectInput): Promise<Project> {
   return data;
 }
 
-export async function addProjectMember(projectId: string, input: { employeeId: string; projectRole: string; responsibilities: string; effectiveFrom: string }): Promise<Project> {
+export async function addProjectMember(
+  projectId: string,
+  input: { employeeId: string; projectRole: string; responsibilities: string; effectiveFrom: string }
+): Promise<Project> {
   const { data } = await http.post<Project>(`/projects/${projectId}/members`, { projectId, ...input });
   return data;
 }

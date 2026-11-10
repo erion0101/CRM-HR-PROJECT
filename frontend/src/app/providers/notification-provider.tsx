@@ -27,11 +27,14 @@ export function NotificationProvider({ children }: PropsWithChildren) {
     setNotifications((items) => items.filter((item) => item.id !== id));
   }, []);
 
-  const notify = useCallback((input: NotificationInput) => {
-    const id = Date.now() + Math.random();
-    setNotifications((items) => [...items, { id, tone: 'info', ...input }]);
-    window.setTimeout(() => dismiss(id), 5_000);
-  }, [dismiss]);
+  const notify = useCallback(
+    (input: NotificationInput) => {
+      const id = Date.now() + Math.random();
+      setNotifications((items) => [...items, { id, tone: 'info', ...input }]);
+      window.setTimeout(() => dismiss(id), 5_000);
+    },
+    [dismiss]
+  );
 
   const value = useMemo(() => ({ notify }), [notify]);
 
@@ -44,8 +47,17 @@ export function NotificationProvider({ children }: PropsWithChildren) {
           return (
             <div className={`toast toast--${item.tone}`} key={item.id} role="status">
               <Icon size={20} aria-hidden="true" />
-              <div><strong>{item.title}</strong>{item.message ? <p>{item.message}</p> : null}</div>
-              <button className="icon-button icon-button--small" onClick={() => dismiss(item.id)} aria-label="Dismiss notification"><X size={16} /></button>
+              <div>
+                <strong>{item.title}</strong>
+                {item.message ? <p>{item.message}</p> : null}
+              </div>
+              <button
+                className="icon-button icon-button--small"
+                onClick={() => dismiss(item.id)}
+                aria-label="Dismiss notification"
+              >
+                <X size={16} />
+              </button>
             </div>
           );
         })}

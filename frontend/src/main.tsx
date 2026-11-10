@@ -13,8 +13,10 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryProvider>
       <NotificationProvider>
-        <AuthProvider><RouterProvider router={router} /></AuthProvider>
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
       </NotificationProvider>
     </QueryProvider>
-  </StrictMode>,
+  </StrictMode>
 );

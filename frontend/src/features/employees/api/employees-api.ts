@@ -1,7 +1,17 @@
 import { http } from '@/lib/api-client';
 import type { PageResult } from '@/types/api';
 
-import type { AssignmentHistory, Employee, EmployeeActivityEvent, EmployeeInput, EmployeeProfile, EmployeeReference, EmploymentHistory, EmploymentStatus, ReportingLineHistory } from '../types';
+import type {
+  AssignmentHistory,
+  Employee,
+  EmployeeActivityEvent,
+  EmployeeInput,
+  EmployeeProfile,
+  EmployeeReference,
+  EmploymentHistory,
+  EmploymentStatus,
+  ReportingLineHistory
+} from '../types';
 
 export interface EmployeeFilters {
   search?: string;
@@ -46,8 +56,14 @@ export async function getDirectReports(id: string): Promise<EmployeeReference[]>
   return data;
 }
 
-export async function getEmployeeActivity(id: string, cursor?: string, limit = 30): Promise<PageResult<EmployeeActivityEvent>> {
-  const { data } = await http.get<PageResult<EmployeeActivityEvent>>(`/employees/${id}/activity`, { params: { cursor, limit } });
+export async function getEmployeeActivity(
+  id: string,
+  cursor?: string,
+  limit = 30
+): Promise<PageResult<EmployeeActivityEvent>> {
+  const { data } = await http.get<PageResult<EmployeeActivityEvent>>(`/employees/${id}/activity`, {
+    params: { cursor, limit }
+  });
   return data;
 }
 
@@ -56,7 +72,11 @@ export async function createEmployee(input: EmployeeInput): Promise<Employee> {
   return data;
 }
 
-export async function updateEmployee(id: string, version: number, input: Omit<EmployeeInput, 'employeeNumber'>): Promise<Employee> {
+export async function updateEmployee(
+  id: string,
+  version: number,
+  input: Omit<EmployeeInput, 'employeeNumber'>
+): Promise<Employee> {
   const { data } = await http.put<Employee>(`/employees/${id}`, input, { headers: { 'If-Match': `"${version}"` } });
   return data;
 }
@@ -65,17 +85,26 @@ export async function archiveEmployee(id: string, version: number): Promise<void
   await http.delete(`/employees/${id}`, { headers: { 'If-Match': `"${version}"` } });
 }
 
-export async function setEmployment(id: string, input: { status: EmploymentStatus; startDate: string; endDate?: string }): Promise<Employee> {
+export async function setEmployment(
+  id: string,
+  input: { status: EmploymentStatus; startDate: string; endDate?: string }
+): Promise<Employee> {
   const { data } = await http.put<Employee>(`/employees/${id}/employment`, input);
   return data;
 }
 
-export async function addAssignment(id: string, input: { positionId: string; departmentId: string; effectiveFrom: string; effectiveTo?: string }): Promise<Employee> {
+export async function addAssignment(
+  id: string,
+  input: { positionId: string; departmentId: string; effectiveFrom: string; effectiveTo?: string }
+): Promise<Employee> {
   const { data } = await http.post<Employee>(`/employees/${id}/assignments`, input);
   return data;
 }
 
-export async function addReportingLine(id: string, input: { effectiveFrom: string; effectiveTo?: string }): Promise<Employee> {
+export async function addReportingLine(
+  id: string,
+  input: { effectiveFrom: string; effectiveTo?: string }
+): Promise<Employee> {
   const { data } = await http.post<Employee>(`/employees/${id}/reporting-lines`, input);
   return data;
 }

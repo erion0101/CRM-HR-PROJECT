@@ -6,7 +6,7 @@ describe('isChunkLoadError', () => {
   it.each([
     'Failed to fetch dynamically imported module: http://localhost/assets/security-page.js',
     'Importing a module script failed.',
-    'ChunkLoadError: Loading chunk 12 failed',
+    'ChunkLoadError: Loading chunk 12 failed'
   ])('recognizes a recoverable stale chunk failure: %s', (message) => {
     expect(isChunkLoadError(new TypeError(message))).toBe(true);
   });

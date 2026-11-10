@@ -2,9 +2,25 @@ import { describe, expect, it } from 'vitest';
 
 import type { CurrentUser, Role } from '@/types/api';
 
-import { canManageKnowledge, canManageOnboarding, canManageOrganization, canManagePeople, canManageProjects, canManageUsers, canViewAudit, canViewCompanyWorkspace, canViewSalary } from './access';
+import {
+  canManageKnowledge,
+  canManageOnboarding,
+  canManageOrganization,
+  canManagePeople,
+  canManageProjects,
+  canManageUsers,
+  canViewAudit,
+  canViewCompanyWorkspace,
+  canViewSalary
+} from './access';
 
-const user = (role: Role): CurrentUser => ({ userId: 'user-1', organizationId: 'org-1', employeeId: null, email: 'person@example.local', roles: [role] });
+const user = (role: Role): CurrentUser => ({
+  userId: 'user-1',
+  organizationId: 'org-1',
+  employeeId: null,
+  email: 'person@example.local',
+  roles: [role]
+});
 
 describe('role capabilities', () => {
   it('limits account administration to administrators', () => {

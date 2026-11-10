@@ -7,9 +7,21 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
 }
 
-export function Button({ children, className = '', variant = 'primary', size = 'medium', loading, disabled, ...props }: PropsWithChildren<ButtonProps>) {
+export function Button({
+  children,
+  className = '',
+  variant = 'primary',
+  size = 'medium',
+  loading,
+  disabled,
+  ...props
+}: PropsWithChildren<ButtonProps>) {
   return (
-    <button className={`button button--${variant} button--${size} ${className}`} disabled={disabled || loading} {...props}>
+    <button
+      className={`button button--${variant} button--${size} ${className}`}
+      disabled={disabled || loading}
+      {...props}
+    >
       {loading ? <LoaderCircle className="spin" size={16} aria-hidden="true" /> : null}
       {children}
     </button>

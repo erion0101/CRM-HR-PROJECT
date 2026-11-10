@@ -24,8 +24,17 @@ export interface EmployeeInput {
   dateOfBirth?: string;
 }
 
-export interface OrganizationReference { id: string; name: string; code: string | null }
-export interface EmployeeReference { id: string; employeeNumber: string; fullName: string; workEmail: string }
+export interface OrganizationReference {
+  id: string;
+  name: string;
+  code: string | null;
+}
+export interface EmployeeReference {
+  id: string;
+  employeeNumber: string;
+  fullName: string;
+  workEmail: string;
+}
 
 export interface EmployeeProfile {
   id: string;
@@ -46,9 +55,28 @@ export interface EmployeeProfile {
   version: number;
 }
 
-export interface EmploymentHistory { id: string; status: EmploymentStatus; startDate: string; endDate: string | null; version: number }
-export interface AssignmentHistory { id: string; position: OrganizationReference; department: OrganizationReference; effectiveFrom: string; effectiveTo: string | null; version: number }
-export interface ReportingLineHistory { id: string; manager: EmployeeReference; effectiveFrom: string; effectiveTo: string | null; version: number }
+export interface EmploymentHistory {
+  id: string;
+  status: EmploymentStatus;
+  startDate: string;
+  endDate: string | null;
+  version: number;
+}
+export interface AssignmentHistory {
+  id: string;
+  position: OrganizationReference;
+  department: OrganizationReference;
+  effectiveFrom: string;
+  effectiveTo: string | null;
+  version: number;
+}
+export interface ReportingLineHistory {
+  id: string;
+  manager: EmployeeReference;
+  effectiveFrom: string;
+  effectiveTo: string | null;
+  version: number;
+}
 
 export interface EmployeeActivityEvent {
   id: string;

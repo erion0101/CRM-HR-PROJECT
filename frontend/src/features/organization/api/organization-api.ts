@@ -19,7 +19,9 @@ export async function createDepartment(input: DepartmentInput): Promise<Departme
 }
 
 export async function updateDepartment(item: Department, input: DepartmentInput): Promise<Department> {
-  const { data } = await http.put<Department>(`/departments/${item.id}`, input, { headers: { 'If-Match': `"${item.version}"` } });
+  const { data } = await http.put<Department>(`/departments/${item.id}`, input, {
+    headers: { 'If-Match': `"${item.version}"` }
+  });
   return data;
 }
 
@@ -27,13 +29,27 @@ export async function archiveDepartment(item: Department): Promise<void> {
   await http.delete(`/departments/${item.id}`, { headers: { 'If-Match': `"${item.version}"` } });
 }
 
-export async function assignDepartmentEmployee(departmentId: string, employeeId: string, input: { positionId: string; effectiveFrom: string }): Promise<DepartmentOverview> {
-  const { data } = await http.put<DepartmentOverview>(`/departments/${departmentId}/employees/${employeeId}`, { departmentId, employeeId, ...input });
+export async function assignDepartmentEmployee(
+  departmentId: string,
+  employeeId: string,
+  input: { positionId: string; effectiveFrom: string }
+): Promise<DepartmentOverview> {
+  const { data } = await http.put<DepartmentOverview>(`/departments/${departmentId}/employees/${employeeId}`, {
+    departmentId,
+    employeeId,
+    ...input
+  });
   return data;
 }
 
-export async function removeDepartmentEmployee(departmentId: string, employeeId: string, effectiveOn: string): Promise<DepartmentOverview> {
-  const { data } = await http.delete<DepartmentOverview>(`/departments/${departmentId}/employees/${employeeId}`, { params: { effectiveOn } });
+export async function removeDepartmentEmployee(
+  departmentId: string,
+  employeeId: string,
+  effectiveOn: string
+): Promise<DepartmentOverview> {
+  const { data } = await http.delete<DepartmentOverview>(`/departments/${departmentId}/employees/${employeeId}`, {
+    params: { effectiveOn }
+  });
   return data;
 }
 
@@ -48,7 +64,9 @@ export async function createPosition(input: PositionInput): Promise<Position> {
 }
 
 export async function updatePosition(item: Position, input: PositionInput): Promise<Position> {
-  const { data } = await http.put<Position>(`/positions/${item.id}`, input, { headers: { 'If-Match': `"${item.version}"` } });
+  const { data } = await http.put<Position>(`/positions/${item.id}`, input, {
+    headers: { 'If-Match': `"${item.version}"` }
+  });
   return data;
 }
 
