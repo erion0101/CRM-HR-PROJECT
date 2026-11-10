@@ -44,22 +44,32 @@ internal sealed class OnboardingRepository(AppDbContext db, ICurrentUserService 
         var query = db.OnboardingTemplates.AsNoTracking().Where(x => x.OrganizationId == OrganizationId);
         if (publishedOnly) query = query.Where(x => x.PublishedVersion != null && x.Status != OnboardingTemplateStatus.Retired);
         var templates = await query.OrderBy(x => x.Name).ToListAsync(cancellationToken);
-        var result = new List<OnboardingTemplateDto>();
-        foreach (var template in templates)
+        if (templates.Count == 0) return [];
+
+        var templateIds = templates.Select(x => x.Id).ToArray();
+        var versions = await db.OnboardingTemplateVersions.AsNoTracking().Where(x => templateIds.Contains(x.TemplateId))
+            .Select(x => new { x.Id, x.TemplateId, x.VersionNumber }).ToListAsync(cancellationToken);
+        var shownVersionIds = templates.ToDictionary(x => x.Id, template =>
         {
             var number = publishedOnly ? template.PublishedVersion!.Value : template.CurrentVersion;
-            var versionId = await db.OnboardingTemplateVersions.Where(x => x.TemplateId == template.Id && x.VersionNumber == number)
-                .Select(x => x.Id).SingleAsync(cancellationToken);
-            var steps = await db.OnboardingTemplateSteps.AsNoTracking().Where(x => x.TemplateVersionId == versionId)
+            return versions.Single(x => x.TemplateId == template.Id && x.VersionNumber == number).Id;
+        });
+        var versionIds = shownVersionIds.Values.ToArray();
+        var steps = (await db.OnboardingTemplateSteps.AsNoTracking().Where(x => versionIds.Contains(x.TemplateVersionId))
                 .OrderBy(x => x.SectionOrder).ThenBy(x => x.StepOrder)
-                .Select(x => new OnboardingTemplateStepDto(x.Id, x.SectionTitle, x.SectionOrder, x.Title, x.Instructions,
-                    x.ExpectedOutcome, x.StepType, x.StepOrder, x.DueAfterDays, x.IsRequired, x.KnowledgeArticleId,
-                    x.DocumentId, x.ExternalUrl, x.DependsOnStepId, x.MinimumReadingMinutes)).ToListAsync(cancellationToken);
-            result.Add(new OnboardingTemplateDto(template.Id, template.Name, template.Description, template.DepartmentId, template.PositionId,
-                template.Kind, template.ProjectId, template.AutoAssignToNewEmployees,
-                template.DurationDays, template.Status, template.CurrentVersion, template.PublishedVersion, steps, template.Version));
-        }
-        return result;
+                .Select(x => new
+                {
+                    x.TemplateVersionId,
+                    Dto = new OnboardingTemplateStepDto(x.Id, x.SectionTitle, x.SectionOrder, x.Title, x.Instructions,
+                        x.ExpectedOutcome, x.StepType, x.StepOrder, x.DueAfterDays, x.IsRequired, x.KnowledgeArticleId,
+                        x.DocumentId, x.ExternalUrl, x.DependsOnStepId, x.MinimumReadingMinutes)
+                }).ToListAsync(cancellationToken))
+            .ToLookup(x => x.TemplateVersionId, x => x.Dto);
+
+        return templates.Select(template => new OnboardingTemplateDto(template.Id, template.Name, template.Description,
+            template.DepartmentId, template.PositionId, template.Kind, template.ProjectId, template.AutoAssignToNewEmployees,
+            template.DurationDays, template.Status, template.CurrentVersion, template.PublishedVersion,
+            steps[shownVersionIds[template.Id]].ToList(), template.Version)).ToArray();
     }
 
     public Task<OnboardingAssignment?> GetAssignmentAsync(Guid id, CancellationToken cancellationToken) =>
@@ -81,7 +91,7 @@ internal sealed class OnboardingRepository(AppDbContext db, ICurrentUserService 
         var allowed = await scope.GetAccessibleEmployeeIdsAsync(cancellationToken);
         var assignment = await db.OnboardingAssignments.AsNoTracking().SingleOrDefaultAsync(
             x => x.OrganizationId == OrganizationId && x.Id == id && allowed.Contains(x.EmployeeId), cancellationToken);
-        return assignment is null ? null : await MapAssignmentAsync(assignment, cancellationToken);
+        return assignment is null ? null : (await MapAssignmentsAsync([assignment], cancellationToken))[0];
     }
 
     public async Task<IReadOnlyList<OnboardingAssignmentDto>> ListAccessibleAssignmentsAsync(Guid? employeeId, CancellationToken cancellationToken)
@@ -90,9 +100,7 @@ internal sealed class OnboardingRepository(AppDbContext db, ICurrentUserService 
         var query = db.OnboardingAssignments.AsNoTracking().Where(x => x.OrganizationId == OrganizationId && allowed.Contains(x.EmployeeId));
         if (employeeId.HasValue) query = query.Where(x => x.EmployeeId == employeeId);
         var assignments = await query.OrderByDescending(x => x.StartDate).ThenBy(x => x.Id).ToListAsync(cancellationToken);
-        var result = new List<OnboardingAssignmentDto>();
-        foreach (var assignment in assignments) result.Add(await MapAssignmentAsync(assignment, cancellationToken));
-        return result;
+        return await MapAssignmentsAsync(assignments, cancellationToken);
     }
 
     public async Task<OnboardingDashboardDto?> GetMyDashboardAsync(CancellationToken cancellationToken)
@@ -414,46 +422,97 @@ internal sealed class OnboardingRepository(AppDbContext db, ICurrentUserService 
             attempt.SubmittedAtUtc, questionDtos, attempt.Version);
     }
 
-    private async Task<OnboardingAssignmentDto> MapAssignmentAsync(OnboardingAssignment assignment, CancellationToken cancellationToken)
+    /// <summary>
+    /// Maps journeys to DTOs with a fixed number of queries regardless of how many journeys are mapped:
+    /// every related table is loaded once for the whole batch and joined in memory.
+    /// </summary>
+    private async Task<IReadOnlyList<OnboardingAssignmentDto>> MapAssignmentsAsync(IReadOnlyList<OnboardingAssignment> assignments,
+        CancellationToken cancellationToken)
     {
-        var employeeIds = new[] { assignment.EmployeeId, assignment.ManagerEmployeeId, assignment.MentorEmployeeId }.OfType<Guid>().Distinct().ToArray();
-        var employees = await db.Employees.AsNoTracking().Where(x => employeeIds.Contains(x.Id)).ToDictionaryAsync(x => x.Id, x => x.FirstName + " " + x.LastName, cancellationToken);
-        var templateName = await db.OnboardingTemplates.Where(x => x.Id == assignment.TemplateId).Select(x => x.Name).SingleAsync(cancellationToken);
-        var projectTemplateName = assignment.ProjectTemplateId is { } projectTemplateId
-            ? await db.OnboardingTemplates.Where(x => x.Id == projectTemplateId).Select(x => x.Name).SingleOrDefaultAsync(cancellationToken)
-            : null;
-        var projectName = assignment.ProjectId is { } projectId ? await db.Projects.Where(x => x.Id == projectId).Select(x => x.Name).SingleOrDefaultAsync(cancellationToken) : null;
+        if (assignments.Count == 0) return [];
+        var assignmentIds = assignments.Select(x => x.Id).ToArray();
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var steps = await db.OnboardingStepProgresses.AsNoTracking().Where(x => x.AssignmentId == assignment.Id)
-            .OrderBy(x => x.SectionOrder).ThenBy(x => x.StepOrder)
-            .Select(x => new OnboardingStepDto(x.Id, x.SectionTitle, x.SectionOrder, x.Title, x.Instructions, x.ExpectedOutcome,
-                x.StepType, x.StepOrder, x.IsRequired, x.DueDate, x.DueDate < today && x.Status != OnboardingStepStatus.Completed,
-                x.KnowledgeArticleId, x.DocumentId, x.ExternalUrl, x.Status, x.CompletionNote, x.CompletedAtUtc, x.ReviewNote, x.Version))
-            .ToListAsync(cancellationToken);
-        var quizzes = await GetPublishedQuizzesAsync(assignment.PackageVersionIds, cancellationToken);
-        var quiz = quizzes.FirstOrDefault();
-        var readingItems = new List<OnboardingReadingItemDto>();
-        var attempts = new List<OnboardingQuizAttemptSummaryDto>();
-        if (assignment.CurrentReadingCycleId is { } cycleId)
+
+        var employeeIds = assignments.SelectMany(x => new[] { x.EmployeeId, x.ManagerEmployeeId, x.MentorEmployeeId })
+            .OfType<Guid>().Distinct().ToArray();
+        var employees = await db.Employees.AsNoTracking().Where(x => employeeIds.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id, x => x.FirstName + " " + x.LastName, cancellationToken);
+
+        var templateIds = assignments.SelectMany(x => new[] { (Guid?)x.TemplateId, x.ProjectTemplateId }).OfType<Guid>().Distinct().ToArray();
+        var templateNames = await db.OnboardingTemplates.AsNoTracking().Where(x => templateIds.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id, x => x.Name, cancellationToken);
+
+        var projectIds = assignments.Select(x => x.ProjectId).OfType<Guid>().Distinct().ToArray();
+        var projectNames = projectIds.Length == 0 ? new Dictionary<Guid, string>()
+            : await db.Projects.AsNoTracking().Where(x => projectIds.Contains(x.Id)).ToDictionaryAsync(x => x.Id, x => x.Name, cancellationToken);
+
+        var steps = (await db.OnboardingStepProgresses.AsNoTracking().Where(x => assignmentIds.Contains(x.AssignmentId))
+                .OrderBy(x => x.SectionOrder).ThenBy(x => x.StepOrder)
+                .Select(x => new
+                {
+                    x.AssignmentId,
+                    Dto = new OnboardingStepDto(x.Id, x.SectionTitle, x.SectionOrder, x.Title, x.Instructions, x.ExpectedOutcome,
+                        x.StepType, x.StepOrder, x.IsRequired, x.DueDate, x.DueDate < today && x.Status != OnboardingStepStatus.Completed,
+                        x.KnowledgeArticleId, x.DocumentId, x.ExternalUrl, x.Status, x.CompletionNote, x.CompletedAtUtc, x.ReviewNote, x.Version)
+                })
+                .ToListAsync(cancellationToken))
+            .ToLookup(x => x.AssignmentId, x => x.Dto);
+
+        // Latest published quiz per package version, matching GetPublishedQuizAsync.
+        var versionIds = assignments.SelectMany(x => x.PackageVersionIds).Distinct().ToArray();
+        var quizByVersion = (await db.OnboardingQuizzes.AsNoTracking()
+                .Where(x => x.OrganizationId == OrganizationId && versionIds.Contains(x.TemplateVersionId) && x.Status == OnboardingQuizStatus.Published)
+                .ToListAsync(cancellationToken))
+            .GroupBy(x => x.TemplateVersionId)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.QuizVersion).First());
+
+        var cycleIds = assignments.Select(x => x.CurrentReadingCycleId).OfType<Guid>().Distinct().ToArray();
+        var readingByCycle = cycleIds.Length == 0 ? Enumerable.Empty<(Guid, OnboardingReadingItemDto)>().ToLookup(x => x.Item1, x => x.Item2)
+            : (await (from item in db.OnboardingReadingProgresses.AsNoTracking()
+                      join step in db.OnboardingStepProgresses.AsNoTracking() on item.StepProgressId equals step.Id
+                      where cycleIds.Contains(item.ReadingCycleId)
+                      orderby step.SectionOrder, step.StepOrder
+                      select new
+                      {
+                          item.ReadingCycleId,
+                          Dto = new OnboardingReadingItemDto(item.Id, item.StepProgressId, step.SectionTitle, step.Title,
+                              item.IsRequired, item.DocumentId, item.KnowledgeArticleId, item.Status, item.StartedAtUtc,
+                              item.ReadAtUtc, item.Version, item.MinimumReadingMinutes,
+                              item.StartedAtUtc != null && item.MinimumReadingMinutes != null
+                                  ? item.StartedAtUtc.Value.AddMinutes(item.MinimumReadingMinutes.Value) : null)
+                      }).ToListAsync(cancellationToken))
+                .ToLookup(x => x.ReadingCycleId, x => x.Dto);
+
+        var attempts = (await (from attempt in db.OnboardingQuizAttempts.AsNoTracking()
+                               join cycle in db.OnboardingReadingCycles.AsNoTracking() on attempt.ReadingCycleId equals cycle.Id
+                               where assignmentIds.Contains(attempt.AssignmentId)
+                               orderby attempt.AttemptNumber descending
+                               select new
+                               {
+                                   attempt.AssignmentId,
+                                   Dto = new OnboardingQuizAttemptSummaryDto(attempt.Id, attempt.AttemptNumber, cycle.CycleNumber,
+                                       attempt.Status, attempt.ScorePercentage, attempt.PassingPercentage, attempt.StartedAtUtc,
+                                       attempt.SubmittedAtUtc)
+                               }).ToListAsync(cancellationToken))
+            .ToLookup(x => x.AssignmentId, x => x.Dto);
+
+        return assignments.Select(assignment =>
         {
-            var reading = await (from item in db.OnboardingReadingProgresses.AsNoTracking()
-                                 join step in db.OnboardingStepProgresses.AsNoTracking() on item.StepProgressId equals step.Id
-                                 where item.ReadingCycleId == cycleId
-                                 orderby step.SectionOrder, step.StepOrder
-                                 select new OnboardingReadingItemDto(item.Id, item.StepProgressId, step.SectionTitle, step.Title,
-                                     item.IsRequired, item.DocumentId, item.KnowledgeArticleId, item.Status, item.StartedAtUtc,
-                                     item.ReadAtUtc, item.Version, item.MinimumReadingMinutes,
-                                     item.StartedAtUtc != null && item.MinimumReadingMinutes != null
-                                         ? item.StartedAtUtc.Value.AddMinutes(item.MinimumReadingMinutes.Value) : null))
-                                 .ToListAsync(cancellationToken);
-        }
-        attempts.AddRange(await (from attempt in db.OnboardingQuizAttempts.AsNoTracking()
-                                 join cycle in db.OnboardingReadingCycles.AsNoTracking() on attempt.ReadingCycleId equals cycle.Id
-                                 where attempt.AssignmentId == assignment.Id
-                                 orderby attempt.AttemptNumber descending
-                                 select new OnboardingQuizAttemptSummaryDto(attempt.Id, attempt.AttemptNumber, cycle.CycleNumber,
-                                     attempt.Status, attempt.ScorePercentage, attempt.PassingPercentage, attempt.StartedAtUtc,
-                                     attempt.SubmittedAtUtc)).ToListAsync(cancellationToken));
+            var quizzes = assignment.PackageVersionIds.Select(quizByVersion.GetValueOrDefault).OfType<OnboardingQuiz>().ToArray();
+            var readingItems = assignment.CurrentReadingCycleId is { } cycleId
+                ? readingByCycle[cycleId].ToList()
+                : new List<OnboardingReadingItemDto>();
+            return BuildAssignmentDto(assignment, steps[assignment.Id].ToList(), quizzes, readingItems,
+                attempts[assignment.Id].ToList(), employees, templateNames, projectNames);
+        }).ToArray();
+    }
+
+    private static OnboardingAssignmentDto BuildAssignmentDto(OnboardingAssignment assignment, IReadOnlyList<OnboardingStepDto> steps,
+        IReadOnlyList<OnboardingQuiz> quizzes, IReadOnlyList<OnboardingReadingItemDto> readingItems,
+        IReadOnlyList<OnboardingQuizAttemptSummaryDto> attempts, IReadOnlyDictionary<Guid, string> employees,
+        IReadOnlyDictionary<Guid, string> templateNames, IReadOnlyDictionary<Guid, string> projectNames)
+    {
+        var quiz = quizzes.FirstOrDefault();
         var required = steps.Where(x => x.IsRequired).ToArray();
         var readingByStep = readingItems.ToDictionary(x => x.StepProgressId);
         var completedRequired = required.Count(x => readingByStep.TryGetValue(x.Id, out var reading)
@@ -466,11 +525,13 @@ internal sealed class OnboardingRepository(AppDbContext db, ICurrentUserService 
         var assessment = new OnboardingAssessmentDto(assignment.AssessmentStatus, assignment.CurrentReadingCycleNumber,
             requiredReading.Length, readCount, readingPercent, quiz?.Id, quiz?.Title,
             quiz is null ? null : CombinedAssessment.PassingPercentage(quizzes), readingItems, attempts);
-        return new OnboardingAssignmentDto(assignment.Id, assignment.EmployeeId, employees.GetValueOrDefault(assignment.EmployeeId) ?? "Unknown",
-            assignment.TemplateId, templateName, assignment.TemplateVersionNumber, assignment.ProjectId, projectName,
-            assignment.ProjectTemplateId, projectTemplateName,
-            assignment.ManagerEmployeeId, assignment.ManagerEmployeeId is { } manager ? employees.GetValueOrDefault(manager) : null,
-            assignment.MentorEmployeeId, assignment.MentorEmployeeId is { } mentor ? employees.GetValueOrDefault(mentor) : null,
+        string? Name(Guid? id) => id is { } value ? employees.GetValueOrDefault(value) : null;
+        return new OnboardingAssignmentDto(assignment.Id, assignment.EmployeeId, Name(assignment.EmployeeId) ?? "Unknown",
+            assignment.TemplateId, templateNames.GetValueOrDefault(assignment.TemplateId) ?? "Unknown", assignment.TemplateVersionNumber,
+            assignment.ProjectId, assignment.ProjectId is { } projectId ? projectNames.GetValueOrDefault(projectId) : null,
+            assignment.ProjectTemplateId, assignment.ProjectTemplateId is { } projectTemplateId ? templateNames.GetValueOrDefault(projectTemplateId) : null,
+            assignment.ManagerEmployeeId, Name(assignment.ManagerEmployeeId),
+            assignment.MentorEmployeeId, Name(assignment.MentorEmployeeId),
             assignment.StartDate, assignment.Status, progress, assignment.CompletedAtUtc, steps, assessment, assignment.Version);
     }
 

@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Testcontainers.PostgreSql;
@@ -787,6 +788,199 @@ public sealed class ApiAuthorizationTests : IAsyncLifetime
         var remaining = await check.ServiceProvider.GetRequiredService<AppDbContext>().Notifications
             .Where(x => x.RecipientEmployeeId == person.Id).Select(x => x.Title).OrderBy(x => x).ToListAsync();
         Assert.Equal(["fresh-read", "old-unread"], remaining);
+    }
+
+    [Fact]
+    public async Task Listing_journeys_uses_a_constant_number_of_queries()
+    {
+        using var admin = Client();
+        var token = await LoginAsync(admin, AdminEmail, AdminPassword);
+        var package = await CreatePublishedPackageAsync(admin, token, "Company onboarding", "Company", null);
+        var reviewer = await CreateEmployeeAsync(admin, token, "QRY-R", "query.reviewer@integration.local");
+        async Task AssignAsync(int count, int offset)
+        {
+            for (var index = 0; index < count; index++)
+            {
+                var person = await CreateEmployeeAsync(admin, token, $"QRY-{offset + index}", $"query.{offset + index}@integration.local");
+                await SendAsync(admin, HttpMethod.Post, "/api/v1/onboarding/assignments", new
+                {
+                    employeeId = person.Id, templateId = package.Id, projectId = (Guid?)null, managerEmployeeId = reviewer.Id,
+                    mentorEmployeeId = (Guid?)null, startDate = "2026-11-10"
+                }, token);
+            }
+        }
+        async Task<int> CountListQueriesAsync()
+        {
+            using var counter = new SqlCommandCounter("hr_api_tests");
+            var list = await ReadJsonAsync(await admin.GetAsync("/api/v1/onboarding/assignments"));
+            Assert.All(list.EnumerateArray(), x => Assert.Equal("Company onboarding", x.GetProperty("templateName").GetString()));
+            return counter.Count;
+        }
+
+        await AssignAsync(3, 0);
+        var small = await CountListQueriesAsync();
+        await AssignAsync(6, 3);
+        var large = await CountListQueriesAsync();
+
+        Assert.Equal(small, large);
+        Assert.True(large <= 15, $"Listing journeys sent {large} SQL commands.");
+    }
+
+    [Fact]
+    public async Task Employee_reads_required_item_fails_rereads_and_passes_the_quiz()
+    {
+        using var admin = Client();
+        var token = await LoginAsync(admin, AdminEmail, AdminPassword);
+        var article = await ReadJsonAsync(await SendAsync(admin, HttpMethod.Post, "/api/v1/knowledge/articles", new
+        {
+            slug = "security-basics", title = "Security basics", description = "How we keep data safe", category = "Policies",
+            content = "Lock your screen. Report incidents within one hour.", audience = "AllEmployees",
+            projectId = (Guid?)null, departmentId = (Guid?)null, sortOrder = 0
+        }, token));
+        var articleId = article.GetProperty("id").GetGuid();
+        await SendWithEtagAsync(admin, HttpMethod.Post, $"/api/v1/knowledge/articles/{articleId}/publish", new { }, token, article.GetProperty("version").GetInt64());
+
+        var template = await ReadJsonAsync(await SendAsync(admin, HttpMethod.Post, "/api/v1/onboarding/templates", new
+        {
+            name = "Company onboarding", description = "Company basics", durationDays = 30, kind = "Company",
+            steps = new[]
+            {
+                new { sectionTitle = "Policies", sectionOrder = 0, title = "Security basics", instructions = "Read it",
+                    expectedOutcome = "Know the rules", stepType = "ReadArticle", stepOrder = 0, dueAfterDays = 3, isRequired = true,
+                    knowledgeArticleId = (Guid?)articleId }
+            }
+        }, token));
+        var templateId = template.GetProperty("id").GetGuid();
+        await SendWithEtagAsync(admin, HttpMethod.Post, $"/api/v1/onboarding/templates/{templateId}/publish", new { }, token, template.GetProperty("version").GetInt64());
+
+        var quiz = await ReadJsonAsync(await SendAsync(admin, HttpMethod.Post, $"/api/v1/onboarding/templates/{templateId}/quiz",
+            new { title = "Company quiz", passingPercentage = 100, questionCount = 1 }, token));
+        var quizId = quiz.GetProperty("id").GetGuid();
+        var source = (await ReadJsonAsync(await admin.GetAsync($"/api/v1/onboarding/templates/{templateId}/quiz-sources")))[0];
+        var withQuestion = await ReadJsonAsync(await SendAsync(admin, HttpMethod.Post, $"/api/v1/onboarding/quizzes/{quizId}/questions", new
+        {
+            questionText = "How quickly must incidents be reported?", explanation = "The policy says within one hour.", topic = "Incidents",
+            difficulty = "Easy", sortOrder = 0, sourceDocumentId = (Guid?)null, sourceDocumentVersionId = (Guid?)null,
+            sourceKnowledgeRevisionId = source.GetProperty("knowledgeRevisionId").GetGuid(), sourceLabel = source.GetProperty("label").GetString(),
+            sourcePage = (int?)null, sourceParagraph = (int?)null,
+            options = new[]
+            {
+                new { text = "Within one hour", isCorrect = true, sortOrder = 0 },
+                new { text = "Within a week", isCorrect = false, sortOrder = 1 },
+                new { text = "Never", isCorrect = false, sortOrder = 2 },
+                new { text = "At the next review", isCorrect = false, sortOrder = 3 }
+            }
+        }, token));
+        var options = withQuestion.GetProperty("questions")[0].GetProperty("options").EnumerateArray().ToArray();
+        var correctId = options.Single(x => x.GetProperty("isCorrect").GetBoolean()).GetProperty("id").GetGuid();
+        var wrongId = options.First(x => !x.GetProperty("isCorrect").GetBoolean()).GetProperty("id").GetGuid();
+        await SendWithEtagAsync(admin, HttpMethod.Post, $"/api/v1/onboarding/quizzes/{quizId}/publish", new { }, token, withQuestion.GetProperty("version").GetInt64());
+
+        var learner = await CreateEmployeeAsync(admin, token, "LRN-1", "learner@integration.local");
+        await CreateUserAsync(admin, token, "learner.user@integration.local", "Learner-Password-123!", "Employee", learner.Id);
+        await SendAsync(admin, HttpMethod.Post, "/api/v1/onboarding/assignments", new
+        {
+            employeeId = learner.Id, templateId, projectId = (Guid?)null, managerEmployeeId = (Guid?)null,
+            mentorEmployeeId = (Guid?)null, startDate = DateOnly.FromDateTime(DateTime.UtcNow).ToString("yyyy-MM-dd")
+        }, token);
+
+        using var employee = Client();
+        var employeeToken = await LoginAsync(employee, "learner.user@integration.local", "Learner-Password-123!");
+        async Task<JsonElement> JourneyAsync() => (await ReadJsonAsync(await employee.GetAsync("/api/v1/onboarding/me"))).GetProperty("journeys")[0];
+
+        var journey = await JourneyAsync();
+        var journeyId = journey.GetProperty("id").GetGuid();
+        var assessment = journey.GetProperty("assessment");
+        Assert.Equal("Locked", assessment.GetProperty("status").GetString());
+        var item = Assert.Single(assessment.GetProperty("readingItems").EnumerateArray());
+        Assert.Equal(1, assessment.GetProperty("requiredDocuments").GetInt32());
+
+        var locked = await SendAsync(employee, HttpMethod.Post, $"/api/v1/onboarding/assignments/{journeyId}/quiz-attempts", new { }, employeeToken, ensureSuccess: false);
+        Assert.Equal(HttpStatusCode.Conflict, locked.StatusCode);
+
+        async Task ReadEverythingAsync(JsonElement reading)
+        {
+            var url = $"/api/v1/onboarding/assignments/{journeyId}/reading/{reading.GetProperty("stepProgressId").GetGuid()}";
+            var unopened = await SendWithEtagStatusAsync(employee, HttpMethod.Put, url, new { status = "Read" }, employeeToken, reading.GetProperty("version").GetInt64());
+            Assert.Equal(HttpStatusCode.BadRequest, unopened);
+            await SendWithEtagAsync(employee, HttpMethod.Put, url, new { status = "InProgress" }, employeeToken, reading.GetProperty("version").GetInt64());
+            var opened = (await JourneyAsync()).GetProperty("assessment").GetProperty("readingItems")[0];
+            await SendWithEtagAsync(employee, HttpMethod.Put, url, new { status = "Read" }, employeeToken, opened.GetProperty("version").GetInt64());
+        }
+        async Task<JsonElement> TakeQuizAsync(Guid answer)
+        {
+            var attempt = await ReadJsonAsync(await SendAsync(employee, HttpMethod.Post, $"/api/v1/onboarding/assignments/{journeyId}/quiz-attempts", new { }, employeeToken));
+            var questionId = attempt.GetProperty("questions")[0].GetProperty("id").GetGuid();
+            Assert.DoesNotContain("isCorrect", attempt.GetRawText(), StringComparison.OrdinalIgnoreCase);
+            return await ReadJsonAsync(await SendWithEtagAsync(employee, HttpMethod.Post,
+                $"/api/v1/onboarding/quiz-attempts/{attempt.GetProperty("id").GetGuid()}/submit",
+                new { answers = new[] { new { questionId, selectedOptionId = answer } } }, employeeToken, attempt.GetProperty("version").GetInt64()));
+        }
+
+        await ReadEverythingAsync(item);
+        Assert.Equal("Available", (await JourneyAsync()).GetProperty("assessment").GetProperty("status").GetString());
+
+        var failed = await TakeQuizAsync(wrongId);
+        Assert.Equal("Failed", failed.GetProperty("status").GetString());
+        Assert.True(failed.GetProperty("readingReset").GetBoolean());
+        Assert.Empty(failed.GetProperty("answerReview").EnumerateArray());
+        Assert.Single(failed.GetProperty("documentScores").EnumerateArray());
+
+        var reset = (await JourneyAsync()).GetProperty("assessment");
+        Assert.Equal("Locked", reset.GetProperty("status").GetString());
+        Assert.Equal(2, reset.GetProperty("readingCycleNumber").GetInt32());
+        var unread = Assert.Single(reset.GetProperty("readingItems").EnumerateArray());
+        Assert.Equal("Unread", unread.GetProperty("status").GetString());
+
+        await ReadEverythingAsync(unread);
+        var passed = await TakeQuizAsync(correctId);
+        Assert.Equal("Passed", passed.GetProperty("status").GetString());
+        Assert.Single(passed.GetProperty("answerReview").EnumerateArray());
+        var finished = await JourneyAsync();
+        Assert.Equal("Passed", finished.GetProperty("assessment").GetProperty("status").GetString());
+        Assert.Equal("Completed", finished.GetProperty("status").GetString());
+        Assert.Equal(2, finished.GetProperty("assessment").GetProperty("attempts").GetArrayLength());
+    }
+
+    private static async Task<HttpStatusCode> SendWithEtagStatusAsync(HttpClient client, HttpMethod method, string url, object body, string token, long version)
+    {
+        using var request = new HttpRequestMessage(method, url) { Content = JsonContent.Create(body) };
+        request.Headers.Add("X-CSRF-TOKEN", token);
+        request.Headers.TryAddWithoutValidation("If-Match", $"\"{version}\"");
+        return (await client.SendAsync(request)).StatusCode;
+    }
+
+    /// <summary>Counts SQL commands EF Core executes against one database while it is alive.</summary>
+    private sealed class SqlCommandCounter : IObserver<System.Diagnostics.DiagnosticListener>, IObserver<KeyValuePair<string, object?>>, IDisposable
+    {
+        private readonly string _database;
+        private readonly List<IDisposable> _subscriptions = [];
+        private int _count;
+
+        public SqlCommandCounter(string database)
+        {
+            _database = database;
+            _subscriptions.Add(System.Diagnostics.DiagnosticListener.AllListeners.Subscribe(this));
+        }
+
+        public int Count => Volatile.Read(ref _count);
+
+        public void OnNext(System.Diagnostics.DiagnosticListener listener)
+        {
+            if (listener.Name == DbLoggerCategory.Name) _subscriptions.Add(listener.Subscribe(this));
+        }
+
+        public void OnNext(KeyValuePair<string, object?> value)
+        {
+            if (value.Key == RelationalEventId.CommandExecuted.Name &&
+                value.Value is Microsoft.EntityFrameworkCore.Diagnostics.CommandExecutedEventData data &&
+                data.Command.Connection?.Database == _database)
+                Interlocked.Increment(ref _count);
+        }
+
+        public void OnCompleted() { }
+        public void OnError(Exception error) { }
+        public void Dispose() => _subscriptions.ForEach(x => x.Dispose());
     }
 
     private static async Task<JsonElement[]> ActiveJourneysAsync(HttpClient client, Guid employeeId)
