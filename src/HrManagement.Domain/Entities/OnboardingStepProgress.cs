@@ -32,7 +32,7 @@ public sealed class OnboardingStepProgress : Entity
     public string? ReviewNote { get; private set; }
 
     public static OnboardingStepProgress Create(Guid organizationId, Guid assignmentId, OnboardingTemplateStep step,
-        DateOnly startDate, Guid? knowledgeRevisionId, int sectionOrderOffset = 0) => new()
+        DateOnly startDate, Guid? knowledgeRevisionId, int sectionOrderOffset = 0, bool dropDependency = false) => new()
     {
         OrganizationId = organizationId,
         AssignmentId = assignmentId,
@@ -50,7 +50,8 @@ public sealed class OnboardingStepProgress : Entity
         KnowledgeRevisionId = knowledgeRevisionId,
         DocumentId = step.DocumentId,
         ExternalUrl = step.ExternalUrl,
-        DependsOnTemplateStepId = step.DependsOnStepId,
+        // A dependency on a step that was left out of this journey would block the step forever.
+        DependsOnTemplateStepId = dropDependency ? null : step.DependsOnStepId,
         MinimumReadingMinutes = step.MinimumReadingMinutes
     };
 

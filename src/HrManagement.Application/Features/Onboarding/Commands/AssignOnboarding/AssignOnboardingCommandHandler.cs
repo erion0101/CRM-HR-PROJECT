@@ -22,7 +22,7 @@ public sealed class AssignOnboardingCommandHandler(
         if (!await scope.CanAccessEmployeeAsync(request.EmployeeId, cancellationToken)) throw new NotFoundException("Employee not found.");
         var assignment = await new OnboardingJourneyFactory(repository, projects, notifications).CreateAsync(scope.OrganizationId,
             new OnboardingJourneyRequest(request.EmployeeId, request.TemplateId, request.ProjectId, request.ManagerEmployeeId,
-                request.MentorEmployeeId, request.StartDate), cancellationToken);
+                request.MentorEmployeeId, request.StartDate, request.ReadingStepIds), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return await repository.GetAssignmentDtoAsync(assignment.Id, cancellationToken) ?? throw new InvalidOperationException("Assigned onboarding journey was not available.");
     }

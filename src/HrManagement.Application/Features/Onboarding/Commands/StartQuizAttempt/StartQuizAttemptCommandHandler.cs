@@ -26,22 +26,30 @@ public sealed class StartQuizAttemptCommandHandler(IOnboardingRepository reposit
         var quizzes = await repository.GetPublishedQuizzesAsync(assignment.PackageVersionIds, cancellationToken);
         if (quizzes.Count == 0) throw new ConflictException("No published quiz is configured.");
         var previouslyShown = await repository.GetLastSubmittedAttemptQuestionIdsAsync(assignment.Id, cancellationToken);
+        var allowed = await JourneyQuizPool.AllowedQuestionIdsAsync(repository, quizzes,
+            await repository.GetStepsAsync(assignment.Id, cancellationToken), cancellationToken);
 
-        // One attempt covers every package in the journey: each package's bank contributes its own per-attempt count.
+        // One attempt covers every package in the journey: each package's bank contributes its own per-attempt count,
+        // drawn only from questions about the documents this employee was given.
         var chosen = new List<(OnboardingQuizQuestion Question, bool RandomizeOptions)>();
+        var contributing = new List<OnboardingQuiz>();
         foreach (var quiz in quizzes)
         {
-            var pool = await repository.GetQuizQuestionsAsync(quiz.Id, cancellationToken);
-            if (pool.Count < quiz.QuestionCount) throw new ConflictException("The published quiz no longer has enough approved questions.");
-            chosen.AddRange(QuizQuestionSelector.Select(pool, quiz.QuestionCount, previouslyShown, quiz.RandomizeQuestions, RandomNumberGenerator.GetInt32)
+            var pool = (await repository.GetQuizQuestionsAsync(quiz.Id, cancellationToken))
+                .Where(x => allowed.GetValueOrDefault(quiz.Id)?.Contains(x.Id) == true).ToArray();
+            if (pool.Length == 0) continue;
+            contributing.Add(quiz);
+            chosen.AddRange(QuizQuestionSelector.Select(pool, Math.Min(quiz.QuestionCount, pool.Length), previouslyShown,
+                    quiz.RandomizeQuestions, RandomNumberGenerator.GetInt32)
                 .Select(question => (question, quiz.RandomizeOptions)));
         }
-        if (quizzes.Count > 1 && quizzes.Any(x => x.RandomizeQuestions)) Shuffle(chosen);
+        if (chosen.Count == 0) throw new ConflictException("The published quiz has no questions about the documents in this journey.");
+        if (contributing.Count > 1 && contributing.Any(x => x.RandomizeQuestions)) Shuffle(chosen);
 
         var optionsByQuestion = (await repository.GetQuestionOptionsAsync(chosen.Select(x => x.Question.Id).ToArray(), cancellationToken))
             .ToLookup(x => x.QuestionId, x => x.Id);
-        var attempt = OnboardingQuizAttempt.Create(assignment.OrganizationId, assignment.Id, cycle.Id, quizzes[0].Id, assignment.EmployeeId,
-            await repository.CountAttemptsAsync(assignment.Id, cancellationToken) + 1, CombinedAssessment.PassingPercentage(quizzes), DateTimeOffset.UtcNow);
+        var attempt = OnboardingQuizAttempt.Create(assignment.OrganizationId, assignment.Id, cycle.Id, contributing[0].Id, assignment.EmployeeId,
+            await repository.CountAttemptsAsync(assignment.Id, cancellationToken) + 1, CombinedAssessment.PassingPercentage(contributing), DateTimeOffset.UtcNow);
         repository.Add(attempt);
         for (var index = 0; index < chosen.Count; index++)
         {

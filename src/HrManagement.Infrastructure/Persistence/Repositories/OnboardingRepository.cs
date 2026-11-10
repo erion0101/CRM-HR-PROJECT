@@ -230,6 +230,26 @@ internal sealed class OnboardingRepository(AppDbContext db, ICurrentUserService 
         await db.OnboardingQuizQuestions.Where(x => x.OrganizationId == OrganizationId && x.QuizId == quizId)
             .OrderBy(x => x.SortOrder).ThenBy(x => x.Id).ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<QuizQuestionSource>> GetQuizQuestionSourcesAsync(IReadOnlyCollection<Guid> quizIds, CancellationToken cancellationToken) =>
+        await (from question in db.OnboardingQuizQuestions.AsNoTracking()
+               join revision in db.KnowledgeArticleRevisions.AsNoTracking() on question.SourceKnowledgeRevisionId equals revision.Id into revisions
+               from revision in revisions.DefaultIfEmpty()
+               where question.OrganizationId == OrganizationId && quizIds.Contains(question.QuizId)
+               select new QuizQuestionSource(question.Id, question.SourceDocumentId, revision == null ? null : revision.ArticleId))
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> GetArticleDocumentIdsAsync(IReadOnlyCollection<Guid> articleIds,
+        CancellationToken cancellationToken)
+    {
+        if (articleIds.Count == 0) return new Dictionary<Guid, IReadOnlyList<Guid>>();
+        var rows = await db.DocumentAssociations.AsNoTracking()
+            .Where(x => x.OrganizationId == OrganizationId && articleIds.Contains(x.AssociatedEntityId) &&
+                (x.AssociationType == DocumentAssociationType.CompanyKnowledge || x.AssociationType == DocumentAssociationType.ProjectKnowledge))
+            .Select(x => new { x.AssociatedEntityId, x.DocumentId }).ToListAsync(cancellationToken);
+        return rows.GroupBy(x => x.AssociatedEntityId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<Guid>)g.Select(x => x.DocumentId).Distinct().ToArray());
+    }
+
     public async Task<IReadOnlyList<OnboardingQuizAnswerOption>> GetQuestionOptionsAsync(Guid questionId, CancellationToken cancellationToken) =>
         await db.OnboardingQuizAnswerOptions.Where(x => x.OrganizationId == OrganizationId && x.QuestionId == questionId)
             .OrderBy(x => x.SortOrder).ToListAsync(cancellationToken);

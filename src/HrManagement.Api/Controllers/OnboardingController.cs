@@ -18,6 +18,7 @@ using HrManagement.Application.Features.Onboarding.Commands.StartQuizAttempt;
 using HrManagement.Application.Features.Onboarding.Commands.SubmitQuizAttempt;
 using HrManagement.Application.Features.Onboarding.Queries.GetMyOnboarding;
 using HrManagement.Application.Features.Onboarding.Queries.GetOnboardingAssignments;
+using HrManagement.Application.Features.Onboarding.Queries.GetAssignmentOptions;
 using HrManagement.Application.Features.Onboarding.Queries.GetOnboardingInsights;
 using HrManagement.Application.Features.Onboarding.Queries.GetOnboardingTemplates;
 using HrManagement.Application.Features.Onboarding.Queries.GetOnboardingQuiz;
@@ -71,6 +72,10 @@ public sealed class OnboardingController(ISender sender) : ApiControllerBase
         var result = await sender.Send(command with { TemplateId = id, ExpectedVersion = ExpectedVersion() }, cancellationToken);
         return WithEtag(result, result.Version);
     }
+
+    [HttpGet("templates/{templateId:guid}/assignment-options"), Authorize(Policy = Policies.OnboardingManage)]
+    public async Task<IActionResult> AssignmentOptions(Guid templateId, [FromQuery] Guid? projectId, CancellationToken cancellationToken) =>
+        Ok(await sender.Send(new GetAssignmentOptionsQuery(templateId, projectId), cancellationToken));
 
     [HttpGet("insights"), Authorize(Policy = Policies.OnboardingManage)]
     public async Task<IActionResult> Insights(CancellationToken cancellationToken) =>

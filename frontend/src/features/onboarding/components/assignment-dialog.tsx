@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { FieldShell, Input, Select } from '@/components/forms/field';
@@ -7,8 +8,10 @@ import { Dialog } from '@/components/ui/dialog';
 import { useEmployees } from '@/features/employees/hooks/use-employees';
 import { getProjects } from '@/features/projects/api/projects-api';
 
+import { getAssignmentOptions } from '../api/onboarding-api';
 import type { OnboardingTemplate } from '../types';
 import { packageKindLabel } from '../utils/package-labels';
+import { ReadingSelection } from './reading-selection';
 
 export interface AssignmentDraft {
   employeeId: string;
@@ -17,9 +20,11 @@ export interface AssignmentDraft {
   managerEmployeeId?: string;
   mentorEmployeeId?: string;
   startDate: string;
+  /** Omitted when HR keeps every document. */
+  readingStepIds?: string[];
 }
 
-type AssignmentFormValues = Required<AssignmentDraft>;
+type AssignmentFormValues = Required<Omit<AssignmentDraft, 'readingStepIds'>>;
 
 export function AssignmentDialog({
   open,
@@ -64,13 +69,37 @@ export function AssignmentDialog({
       }`
     }));
 
+  const effectiveProjectId = (isProjectPackage ? selected.projectId : projectId) || undefined;
+  const options = useQuery({
+    queryKey: ['onboarding', 'assignment-options', selected?.id, effectiveProjectId],
+    queryFn: () => getAssignmentOptions(selected!.id, effectiveProjectId),
+    enabled: Boolean(selected)
+  });
+  // The unticked documents belong to one package/project choice; changing that choice starts again with everything ticked.
+  const selectionKey = `${selected?.id ?? ''}|${effectiveProjectId ?? ''}`;
+  const [selection, setSelection] = useState<{ key: string; excluded: ReadonlySet<string> }>({
+    key: '',
+    excluded: new Set()
+  });
+  const excluded = selection.key === selectionKey ? selection.excluded : new Set<string>();
+  const toggle = (stepId: string) => {
+    const next = new Set(excluded);
+    if (next.has(stepId)) next.delete(stepId);
+    else next.add(stepId);
+    setSelection({ key: selectionKey, excluded: next });
+  };
+  const allStepIds = (options.data?.packages ?? []).flatMap((pkg) =>
+    pkg.readingSteps.map((step) => step.templateStepId)
+  );
+
   const submit = form.handleSubmit(async (value) =>
     onSave({
       ...value,
       // A project package always runs on its own project.
-      projectId: (isProjectPackage ? selected.projectId : value.projectId) || undefined,
+      projectId: effectiveProjectId,
       managerEmployeeId: value.managerEmployeeId || undefined,
-      mentorEmployeeId: value.mentorEmployeeId || undefined
+      mentorEmployeeId: value.mentorEmployeeId || undefined,
+      readingStepIds: excluded.size ? allStepIds.filter((id) => !excluded.has(id)) : undefined
     })
   );
 
@@ -79,7 +108,7 @@ export function AssignmentDialog({
       open={open}
       onClose={onClose}
       title="Assign onboarding journey"
-      description="Confirm the template, project, manager, mentor, and start date."
+      description="Choose the package, project, and the documents this employee must read."
     >
       <form className="form-stack" onSubmit={submit}>
         <FieldShell label="Employee" htmlFor="assignmentEmployee" required>
@@ -115,6 +144,7 @@ export function AssignmentDialog({
             )}
           />
         ) : null}
+        {options.data ? <ReadingSelection options={options.data} excluded={excluded} onToggle={toggle} /> : null}
         <div className="form-grid">
           <FieldShell label="Manager" htmlFor="assignmentManager">
             <Select id="assignmentManager" {...form.register('managerEmployeeId')}>

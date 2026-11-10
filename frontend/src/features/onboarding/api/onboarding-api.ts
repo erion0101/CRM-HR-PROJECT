@@ -1,6 +1,7 @@
 import { http } from '@/lib/api-client';
 import type {
   OnboardingAssignment,
+  OnboardingAssignmentOptions,
   OnboardingDashboard,
   OnboardingInsights,
   OnboardingQuizAdmin,
@@ -75,6 +76,8 @@ export async function assignOnboarding(input: {
   managerEmployeeId?: string;
   mentorEmployeeId?: string;
   startDate: string;
+  /** Reading steps to include; omit to include every reading step. */
+  readingStepIds?: string[];
 }): Promise<OnboardingAssignment> {
   const { data } = await http.post<OnboardingAssignment>('/onboarding/assignments', input);
   return data;
@@ -216,5 +219,18 @@ export async function deleteOnboardingQuizQuestion(
 
 export async function getOnboardingInsights(): Promise<OnboardingInsights> {
   const { data } = await http.get<OnboardingInsights>('/onboarding/insights');
+  return data;
+}
+
+export async function getAssignmentOptions(
+  templateId: string,
+  projectId?: string
+): Promise<OnboardingAssignmentOptions> {
+  const { data } = await http.get<OnboardingAssignmentOptions>(
+    `/onboarding/templates/${templateId}/assignment-options`,
+    {
+      params: projectId ? { projectId } : undefined
+    }
+  );
   return data;
 }

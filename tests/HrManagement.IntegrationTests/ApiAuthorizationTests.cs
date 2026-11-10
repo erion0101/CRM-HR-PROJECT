@@ -942,6 +942,97 @@ public sealed class ApiAuthorizationTests : IAsyncLifetime
         Assert.Equal(2, finished.GetProperty("assessment").GetProperty("attempts").GetArrayLength());
     }
 
+    [Fact]
+    public async Task Hr_chooses_which_documents_an_employee_reads_and_the_quiz_follows()
+    {
+        using var admin = Client();
+        var token = await LoginAsync(admin, AdminEmail, AdminPassword);
+        var security = await CreatePublishedArticleAsync(admin, token, "security-rules", "Security rules", "Report incidents within one hour.");
+        var quality = await CreatePublishedArticleAsync(admin, token, "quality-rules", "Quality rules", "Every deviation needs a CAPA record.");
+        var template = await ReadJsonAsync(await SendAsync(admin, HttpMethod.Post, "/api/v1/onboarding/templates", new
+        {
+            name = "Company onboarding", description = "Company basics", durationDays = 30, kind = "Company",
+            steps = new[]
+            {
+                new { sectionTitle = "Policies", sectionOrder = 0, title = "Security rules", instructions = "Read it", expectedOutcome = "Know it",
+                    stepType = "ReadArticle", stepOrder = 0, dueAfterDays = 3, isRequired = true, knowledgeArticleId = (Guid?)security },
+                new { sectionTitle = "Policies", sectionOrder = 1, title = "Quality rules", instructions = "Read it", expectedOutcome = "Know it",
+                    stepType = "ReadArticle", stepOrder = 1, dueAfterDays = 3, isRequired = true, knowledgeArticleId = (Guid?)quality }
+            }
+        }, token));
+        var templateId = template.GetProperty("id").GetGuid();
+        await SendWithEtagAsync(admin, HttpMethod.Post, $"/api/v1/onboarding/templates/{templateId}/publish", new { }, token, template.GetProperty("version").GetInt64());
+        var quiz = await ReadJsonAsync(await SendAsync(admin, HttpMethod.Post, $"/api/v1/onboarding/templates/{templateId}/quiz",
+            new { title = "Company quiz", passingPercentage = 50, questionCount = 2 }, token));
+        var quizId = quiz.GetProperty("id").GetGuid();
+        var sources = (await ReadJsonAsync(await admin.GetAsync($"/api/v1/onboarding/templates/{templateId}/quiz-sources"))).EnumerateArray().ToArray();
+        await AddQuestionAsync(admin, token, quizId, sources.Single(x => x.GetProperty("label").GetString()!.Contains("Security")), "How fast are incidents reported?");
+        var withQuestions = await AddQuestionAsync(admin, token, quizId, sources.Single(x => x.GetProperty("label").GetString()!.Contains("Quality")), "What does a deviation need?");
+        await SendWithEtagAsync(admin, HttpMethod.Post, $"/api/v1/onboarding/quizzes/{quizId}/publish", new { }, token, withQuestions.GetProperty("version").GetInt64());
+
+        var options = await ReadJsonAsync(await admin.GetAsync($"/api/v1/onboarding/templates/{templateId}/assignment-options"));
+        var steps = options.GetProperty("packages")[0].GetProperty("readingSteps").EnumerateArray().ToArray();
+        Assert.Equal(2, steps.Length);
+        Assert.All(steps, step => Assert.Equal(1, step.GetProperty("questionCount").GetInt32()));
+        var securityStepId = steps.Single(x => x.GetProperty("title").GetString() == "Security rules").GetProperty("templateStepId").GetGuid();
+
+        var learner = await CreateEmployeeAsync(admin, token, "PICK-1", "picked@integration.local");
+        await CreateUserAsync(admin, token, "picked.user@integration.local", "Picked-Password-123!", "Employee", learner.Id);
+        var invalid = await SendAsync(admin, HttpMethod.Post, "/api/v1/onboarding/assignments", new
+        {
+            employeeId = learner.Id, templateId, startDate = "2026-11-10", readingStepIds = new[] { Guid.NewGuid() }
+        }, token, ensureSuccess: false);
+        Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
+        await SendAsync(admin, HttpMethod.Post, "/api/v1/onboarding/assignments", new
+        {
+            employeeId = learner.Id, templateId, startDate = "2026-11-10", readingStepIds = new[] { securityStepId }
+        }, token);
+
+        using var employee = Client();
+        var employeeToken = await LoginAsync(employee, "picked.user@integration.local", "Picked-Password-123!");
+        var journey = (await ReadJsonAsync(await employee.GetAsync("/api/v1/onboarding/me"))).GetProperty("journeys")[0];
+        var journeyId = journey.GetProperty("id").GetGuid();
+        var item = Assert.Single(journey.GetProperty("assessment").GetProperty("readingItems").EnumerateArray());
+        Assert.Equal("Security rules", item.GetProperty("title").GetString());
+        Assert.DoesNotContain(journey.GetProperty("steps").EnumerateArray(), x => x.GetProperty("title").GetString() == "Quality rules");
+
+        var url = $"/api/v1/onboarding/assignments/{journeyId}/reading/{item.GetProperty("stepProgressId").GetGuid()}";
+        await SendWithEtagAsync(employee, HttpMethod.Put, url, new { status = "InProgress" }, employeeToken, item.GetProperty("version").GetInt64());
+        var opened = (await ReadJsonAsync(await employee.GetAsync("/api/v1/onboarding/me"))).GetProperty("journeys")[0]
+            .GetProperty("assessment").GetProperty("readingItems")[0];
+        await SendWithEtagAsync(employee, HttpMethod.Put, url, new { status = "Read" }, employeeToken, opened.GetProperty("version").GetInt64());
+
+        var attempt = await ReadJsonAsync(await SendAsync(employee, HttpMethod.Post, $"/api/v1/onboarding/assignments/{journeyId}/quiz-attempts", new { }, employeeToken));
+        var question = Assert.Single(attempt.GetProperty("questions").EnumerateArray());
+        Assert.Equal("How fast are incidents reported?", question.GetProperty("questionText").GetString());
+    }
+
+    private static async Task<Guid> CreatePublishedArticleAsync(HttpClient client, string token, string slug, string title, string content)
+    {
+        var article = await ReadJsonAsync(await SendAsync(client, HttpMethod.Post, "/api/v1/knowledge/articles", new
+        {
+            slug, title, description = title, category = "Policies", content, audience = "AllEmployees",
+            projectId = (Guid?)null, departmentId = (Guid?)null, sortOrder = 0
+        }, token));
+        var id = article.GetProperty("id").GetGuid();
+        await SendWithEtagAsync(client, HttpMethod.Post, $"/api/v1/knowledge/articles/{id}/publish", new { }, token, article.GetProperty("version").GetInt64());
+        return id;
+    }
+
+    private static async Task<JsonElement> AddQuestionAsync(HttpClient client, string token, Guid quizId, JsonElement source, string text) =>
+        await ReadJsonAsync(await SendAsync(client, HttpMethod.Post, $"/api/v1/onboarding/quizzes/{quizId}/questions", new
+        {
+            questionText = text, explanation = "From the article.", topic = "Policy", difficulty = "Easy", sortOrder = 0,
+            sourceDocumentId = (Guid?)null, sourceDocumentVersionId = (Guid?)null,
+            sourceKnowledgeRevisionId = source.GetProperty("knowledgeRevisionId").GetGuid(), sourceLabel = source.GetProperty("label").GetString(),
+            sourcePage = (int?)null, sourceParagraph = (int?)null,
+            options = new[]
+            {
+                new { text = "Correct", isCorrect = true, sortOrder = 0 }, new { text = "Wrong A", isCorrect = false, sortOrder = 1 },
+                new { text = "Wrong B", isCorrect = false, sortOrder = 2 }, new { text = "Wrong C", isCorrect = false, sortOrder = 3 }
+            }
+        }, token));
+
     private static async Task<HttpStatusCode> SendWithEtagStatusAsync(HttpClient client, HttpMethod method, string url, object body, string token, long version)
     {
         using var request = new HttpRequestMessage(method, url) { Content = JsonContent.Create(body) };

@@ -55,6 +55,9 @@ public interface IOnboardingRepository
     Task<int> GetNextQuizVersionAsync(Guid templateVersionId, CancellationToken cancellationToken);
     Task<OnboardingQuizAdminDto?> GetQuizAdminDtoAsync(Guid quizId, CancellationToken cancellationToken);
     Task<IReadOnlyList<OnboardingQuizQuestion>> GetQuizQuestionsAsync(Guid quizId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<QuizQuestionSource>> GetQuizQuestionSourcesAsync(IReadOnlyCollection<Guid> quizIds, CancellationToken cancellationToken);
+    /// <summary>Clean company/project documents attached to each article.</summary>
+    Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> GetArticleDocumentIdsAsync(IReadOnlyCollection<Guid> articleIds, CancellationToken cancellationToken);
     Task<IReadOnlyList<OnboardingQuizAnswerOption>> GetQuestionOptionsAsync(Guid questionId, CancellationToken cancellationToken);
     Task<OnboardingQuizQuestion?> GetQuestionAsync(Guid quizId, Guid questionId, CancellationToken cancellationToken);
     Task<IReadOnlyList<OnboardingQuizAnswerOption>> GetQuestionOptionsAsync(IReadOnlyCollection<Guid> questionIds, CancellationToken cancellationToken);

@@ -296,3 +296,27 @@ export interface OnboardingInsights {
   needsAttention: OnboardingAttentionItem[];
   documentDifficulty: OnboardingDocumentDifficulty[];
 }
+
+export interface OnboardingReadingOption {
+  templateStepId: string;
+  sectionTitle: string;
+  title: string;
+  isRequired: boolean;
+  documentId?: string;
+  knowledgeArticleId?: string;
+  /** Reviewed quiz questions about this item. */
+  questionCount: number;
+}
+
+export interface OnboardingPackageOption {
+  templateId: string;
+  name: string;
+  kind: OnboardingTemplateKind;
+  hasQuiz: boolean;
+  questionsPerAttempt: number;
+  readingSteps: OnboardingReadingOption[];
+}
+
+export interface OnboardingAssignmentOptions {
+  packages: OnboardingPackageOption[];
+}
