@@ -1074,6 +1074,50 @@ public sealed class ApiAuthorizationTests : IAsyncLifetime
         public void Dispose() => _subscriptions.ForEach(x => x.Dispose());
     }
 
+    [Fact]
+    public async Task New_hire_flow_creates_exactly_one_combined_journey()
+    {
+        using var admin = Client();
+        var token = await LoginAsync(admin, AdminEmail, AdminPassword);
+        var lead = await CreateEmployeeAsync(admin, token, "HIRE-L", "hire.lead@integration.local");
+        var project = await ReadJsonAsync(await SendAsync(admin, HttpMethod.Post, "/api/v1/projects", new
+        {
+            code = "HIRE", name = "Hire Project", purpose = "Testing", description = "Testing", departmentId = (Guid?)null,
+            leadEmployeeId = lead.Id, onboardingContactEmployeeId = (Guid?)null, status = "Active", links = Array.Empty<object>()
+        }, token));
+        var projectId = project.GetProperty("id").GetGuid();
+        var company = await CreatePublishedPackageAsync(admin, token, "Company onboarding", "Company", null);
+        await SendWithEtagAsync(admin, HttpMethod.Put, $"/api/v1/onboarding/templates/{company.Id}/auto-assign", new { enabled = true }, token, company.Version);
+        var portal = await CreatePublishedPackageAsync(admin, token, "Hire project onboarding", "Project", projectId);
+        async Task JoinAsync(Guid employeeId) => await SendAsync(admin, HttpMethod.Post, $"/api/v1/projects/{projectId}/members", new
+        {
+            employeeId, projectRole = "Engineer", responsibilities = "Onboarding", effectiveFrom = "2026-11-10", effectiveTo = (string?)null
+        }, token);
+        async Task ActivateAsync(Guid employeeId) => await SendAsync(admin, HttpMethod.Put, $"/api/v1/employees/{employeeId}/employment",
+            new { status = "Active", startDate = "2026-11-10", endDate = (string?)null }, token);
+
+        // The wizard's order: create, add to project, assign the chosen onboarding, then activate employment.
+        var hire = await CreateEmployeeAsync(admin, token, "HIRE-1", "hire.one@integration.local");
+        await JoinAsync(hire.Id);
+        Assert.Empty(await ActiveJourneysAsync(admin, hire.Id));
+        await SendAsync(admin, HttpMethod.Post, "/api/v1/onboarding/assignments", new
+        {
+            employeeId = hire.Id, templateId = company.Id, projectId, startDate = "2026-11-10"
+        }, token);
+        await ActivateAsync(hire.Id);
+        var journey = Assert.Single(await ActiveJourneysAsync(admin, hire.Id));
+        Assert.Equal(company.Id, journey.GetProperty("templateId").GetGuid());
+        Assert.Equal(portal.Id, journey.GetProperty("projectTemplateId").GetGuid());
+
+        // Without an explicit assignment, activating employment gives the default package with the project's documents.
+        var other = await CreateEmployeeAsync(admin, token, "HIRE-2", "hire.two@integration.local");
+        await JoinAsync(other.Id);
+        await ActivateAsync(other.Id);
+        var automatic = Assert.Single(await ActiveJourneysAsync(admin, other.Id));
+        Assert.Equal(company.Id, automatic.GetProperty("templateId").GetGuid());
+        Assert.Equal(portal.Id, automatic.GetProperty("projectTemplateId").GetGuid());
+    }
+
     private static async Task<JsonElement[]> ActiveJourneysAsync(HttpClient client, Guid employeeId)
     {
         var assignments = await ReadJsonAsync(await client.GetAsync($"/api/v1/onboarding/assignments?employeeId={employeeId}"));

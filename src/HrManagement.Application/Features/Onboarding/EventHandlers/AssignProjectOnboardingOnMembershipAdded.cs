@@ -16,6 +16,9 @@ namespace HrManagement.Application.Features.Onboarding.EventHandlers;
 /// <item>Otherwise (journey in progress or finished, or no journey) they get a separate project journey, so existing
 /// progress is never disturbed.</item>
 /// </list>
+/// Only for people who are already working (active employment): someone still being set up as a new hire gets their
+/// project documents through the onboarding HR assigns (or the default package when their employment is activated),
+/// so they never end up with two journeys.
 /// Authorization comes from the membership itself, which was just created by a user allowed to manage the project;
 /// nothing is returned to the caller. Failures are logged and never undo the membership.
 /// </summary>
@@ -41,6 +44,7 @@ public sealed class AssignProjectOnboardingOnMembershipAdded(
 
     private async Task AssignAsync(ProjectMembershipAddedNotification notification, CancellationToken cancellationToken)
     {
+        if (!await repository.HasActiveEmploymentAsync(notification.EmployeeId, cancellationToken)) return;
         var package = await repository.GetAssignableProjectPackageAsync(notification.ProjectId, cancellationToken);
         if (package is null) return;
         if (await repository.HasJourneyWithPackageAsync(notification.EmployeeId, package.Id, cancellationToken)) return;

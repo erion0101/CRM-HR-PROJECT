@@ -1,4 +1,4 @@
-import { Building2, Mail, Network, Phone, Plus, UserRound } from 'lucide-react';
+import { Building2, Mail, Network, Phone, Plus, UserPlus, UserRound } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 
@@ -62,9 +62,14 @@ export function EmployeesPage() {
         description="Browse colleagues, reporting relationships, roles, and organization assignments."
         actions={
           canManagePeople(user) ? (
-            <Link className="button button--primary button--medium" to="/employees/new">
-              <Plus size={17} /> Add employee
-            </Link>
+            <div className="row-actions">
+              <Link className="button button--secondary button--medium" to="/employees/new">
+                <Plus size={17} /> Add employee only
+              </Link>
+              <Link className="button button--primary button--medium" to="/employees/new-hire">
+                <UserPlus size={17} /> New hire
+              </Link>
+            </div>
           ) : undefined
         }
       >

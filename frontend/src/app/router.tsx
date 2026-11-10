@@ -20,6 +20,9 @@ const DashboardPage = lazyWithRetry(() =>
 const EmployeesPage = lazyWithRetry(() =>
   import('@/features/employees/pages/employees-page').then((module) => ({ default: module.EmployeesPage }))
 );
+const NewHirePage = lazyWithRetry(() =>
+  import('@/features/new-hire/pages/new-hire-page').then((module) => ({ default: module.NewHirePage }))
+);
 const CreateEmployeePage = lazyWithRetry(() =>
   import('@/features/employees/pages/create-employee-page').then((module) => ({ default: module.CreateEmployeePage }))
 );
@@ -111,6 +114,7 @@ export const router = createBrowserRouter([
           { index: true, element: deferred(<DashboardPage />) },
           { path: 'employees', element: deferred(<EmployeesPage />) },
           { path: 'employees/new', element: <RoleRoute roles={['HR']}>{deferred(<CreateEmployeePage />)}</RoleRoute> },
+          { path: 'employees/new-hire', element: <RoleRoute roles={['HR']}>{deferred(<NewHirePage />)}</RoleRoute> },
           { path: 'employees/:employeeId', element: deferred(<EmployeeDetailPage />) },
           { path: 'organization-chart', element: deferred(<OrganizationChartPage />) },
           { path: 'departments', element: deferred(<DepartmentsPage />) },

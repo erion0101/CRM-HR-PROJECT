@@ -24,9 +24,12 @@ public sealed class AssignDefaultOnboardingOnEmploymentActivated(
         if (await repository.HasOpenAssignmentAsync(notification.EmployeeId, cancellationToken)) return;
 
         var managerId = await repository.GetCurrentManagerIdAsync(notification.EmployeeId, notification.StartDate, cancellationToken);
+        // A new hire already added to a project gets that project's documents in the same journey.
+        var projectId = (await repository.GetProjectsWithPackageAsync(notification.EmployeeId, notification.StartDate, cancellationToken))
+            .Cast<Guid?>().FirstOrDefault();
         try
         {
-            await sender.Send(new AssignOnboardingCommand(notification.EmployeeId, package.Id, null, managerId, null,
+            await sender.Send(new AssignOnboardingCommand(notification.EmployeeId, package.Id, projectId, managerId, null,
                 notification.StartDate), cancellationToken);
         }
         catch (Exception exception) when (exception is ConflictException or NotFoundException or ValidationException or DomainException)

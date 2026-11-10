@@ -191,6 +191,20 @@ internal sealed class OnboardingRepository(AppDbContext db, ICurrentUserService 
                 x.Status != OnboardingAssignmentStatus.Superseded)
             .OrderBy(x => x.CreatedAtUtc).ToListAsync(cancellationToken);
 
+    public Task<bool> HasActiveEmploymentAsync(Guid employeeId, CancellationToken cancellationToken) =>
+        db.Employments.AnyAsync(x => x.OrganizationId == OrganizationId && x.EmployeeId == employeeId &&
+            x.Status == EmploymentStatus.Active && x.EndDate == null, cancellationToken);
+
+    public async Task<IReadOnlyList<Guid>> GetProjectsWithPackageAsync(Guid employeeId, DateOnly asOf, CancellationToken cancellationToken) =>
+        await (from membership in db.ProjectMemberships.AsNoTracking()
+               join package in db.OnboardingTemplates.AsNoTracking() on membership.ProjectId equals package.ProjectId
+               where membership.OrganizationId == OrganizationId && membership.EmployeeId == employeeId &&
+                     membership.EffectiveFrom <= asOf && (membership.EffectiveTo == null || membership.EffectiveTo >= asOf) &&
+                     package.Kind == OnboardingTemplateKind.Project && package.PublishedVersion != null &&
+                     package.Status != OnboardingTemplateStatus.Retired
+               orderby membership.EffectiveFrom
+               select membership.ProjectId).Distinct().ToListAsync(cancellationToken);
+
     public Task<string?> GetEmployeeNameAsync(Guid employeeId, CancellationToken cancellationToken) =>
         db.Employees.Where(x => x.OrganizationId == OrganizationId && x.Id == employeeId)
             .Select(x => x.FirstName + " " + x.LastName).SingleOrDefaultAsync(cancellationToken);

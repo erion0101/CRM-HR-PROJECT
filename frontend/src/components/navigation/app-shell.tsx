@@ -11,13 +11,14 @@ import {
   Settings2,
   Sparkles,
   UserCog,
+  UserPlus,
   Users,
   X
 } from 'lucide-react';
 import { useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router';
 
-import { canManageUsers, canViewAudit, canViewCompanyWorkspace, roleLabels } from '@/app/access';
+import { canManagePeople, canManageUsers, canViewAudit, canViewCompanyWorkspace, roleLabels } from '@/app/access';
 import { Avatar } from '@/components/ui/avatar';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { NotificationBell } from '@/features/notifications/components/notification-bell';
@@ -54,7 +55,14 @@ export function AppShell() {
           to: '/employees',
           icon: Users,
           activePaths: ['/employees', '/organization-chart', '/departments', '/positions'],
-          excludePaths: user?.employeeId ? [`/employees/${user.employeeId}`] : []
+          excludePaths: ['/employees/new-hire', ...(user?.employeeId ? [`/employees/${user.employeeId}`] : [])]
+        },
+        {
+          label: 'New hire',
+          to: '/employees/new-hire',
+          icon: UserPlus,
+          visible: canManagePeople(user),
+          exact: true
         }
       ]
     },

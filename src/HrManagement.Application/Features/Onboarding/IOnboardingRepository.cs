@@ -50,6 +50,10 @@ public interface IOnboardingRepository
     Task<bool> HasJourneyWithPackageAsync(Guid employeeId, Guid templateId, CancellationToken cancellationToken);
     /// <summary>Tracked journeys that are not completed, cancelled, or superseded.</summary>
     Task<IReadOnlyList<OnboardingAssignment>> GetOpenAssignmentsAsync(Guid employeeId, CancellationToken cancellationToken);
+    /// <summary>True when the employee's open employment is Active (they are working, not still being set up).</summary>
+    Task<bool> HasActiveEmploymentAsync(Guid employeeId, CancellationToken cancellationToken);
+    /// <summary>Projects the employee is an active member of on the date that have a published onboarding package.</summary>
+    Task<IReadOnlyList<Guid>> GetProjectsWithPackageAsync(Guid employeeId, DateOnly asOf, CancellationToken cancellationToken);
     Task<string?> GetEmployeeNameAsync(Guid employeeId, CancellationToken cancellationToken);
     Task<Guid?> GetCurrentManagerIdAsync(Guid employeeId, DateOnly asOf, CancellationToken cancellationToken);
     Task<int> GetNextQuizVersionAsync(Guid templateVersionId, CancellationToken cancellationToken);
