@@ -92,6 +92,10 @@ Authenticated users have three connected workspaces:
 
 Onboarding remains fully usable when AI is disabled. Published template versions and assigned steps are snapshotted so later edits do not rewrite employee history. Policy acknowledgments reference the exact published knowledge revision. See [docs/onboarding-manual-test.md](docs/onboarding-manual-test.md) for an end-to-end verification scenario.
 
+## Demo company
+
+`scripts/demo/` loads a fictional medical-device company (AsterCare Medical) with company and project documents and onboarding packages. See [scripts/demo/README.md](scripts/demo/README.md).
+
 ## AI assistant
 
 The read-only AI assistant is disabled by default. It uses the official OpenAI .NET SDK on the backend; React never receives a provider key. An OpenAI Platform project API key is required—not a separate Codex credential.
