@@ -1118,6 +1118,24 @@ public sealed class ApiAuthorizationTests : IAsyncLifetime
         Assert.Equal(portal.Id, automatic.GetProperty("projectTemplateId").GetGuid());
     }
 
+    [Fact]
+    public async Task Duplicate_employee_email_or_number_gets_a_clear_message()
+    {
+        using var admin = Client();
+        var token = await LoginAsync(admin, AdminEmail, AdminPassword);
+        await CreateEmployeeAsync(admin, token, "DUP-1", "taken@integration.local");
+
+        var sameEmail = await SendAsync(admin, HttpMethod.Post, "/api/v1/employees", new
+        { employeeNumber = "DUP-2", firstName = "Second", lastName = "Person", workEmail = "taken@integration.local", phone = (string?)null }, token, ensureSuccess: false);
+        var sameNumber = await SendAsync(admin, HttpMethod.Post, "/api/v1/employees", new
+        { employeeNumber = "DUP-1", firstName = "Third", lastName = "Person", workEmail = "free@integration.local", phone = (string?)null }, token, ensureSuccess: false);
+
+        Assert.Equal(HttpStatusCode.Conflict, sameEmail.StatusCode);
+        Assert.Contains("work email is already used", await sameEmail.Content.ReadAsStringAsync());
+        Assert.Equal(HttpStatusCode.Conflict, sameNumber.StatusCode);
+        Assert.Contains("employee number is already used", await sameNumber.Content.ReadAsStringAsync());
+    }
+
     private static async Task<JsonElement[]> ActiveJourneysAsync(HttpClient client, Guid employeeId)
     {
         var assignments = await ReadJsonAsync(await client.GetAsync($"/api/v1/onboarding/assignments?employeeId={employeeId}"));

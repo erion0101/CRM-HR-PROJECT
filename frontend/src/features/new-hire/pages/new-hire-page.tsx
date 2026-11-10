@@ -13,6 +13,7 @@ import { getAssignmentOptions } from '@/features/onboarding/api/onboarding-api';
 import { JobStep, LoginStep, OnboardingStep, PersonStep } from '../components/new-hire-steps';
 import { useNewHireLookups } from '../hooks/use-new-hire-lookups';
 import { type NewHirePlan, type RunStep, useNewHireRun } from '../hooks/use-new-hire-run';
+import { type DuplicateEmployee, findDuplicateEmployees } from '../duplicates';
 import type { NewHireForm } from '../types';
 import { generateTemporaryPassword, suggestEmployeeNumber } from '../utils';
 
@@ -81,8 +82,35 @@ function NewHireWizard({ onRestart }: { onRestart: () => void }) {
     setSelection({ key: selectionKey, excluded: next });
   };
 
+  const [duplicates, setDuplicates] = useState<DuplicateEmployee[]>([]);
+  const [checking, setChecking] = useState(false);
+
+  /** Stops on the Person step when the email or employee number already belongs to someone. */
+  const personIsNew = async () => {
+    setChecking(true);
+    try {
+      const found = await findDuplicateEmployees(form.getValues('workEmail'), form.getValues('employeeNumber'));
+      setDuplicates(found);
+      for (const duplicate of found) {
+        const name = `${duplicate.employee.firstName} ${duplicate.employee.lastName}`;
+        form.setError(duplicate.field, {
+          message:
+            duplicate.field === 'workEmail'
+              ? `Already used by ${name}. Use a different email.`
+              : `Already used by ${name}. Use a different number.`
+        });
+      }
+      return found.length === 0;
+    } catch {
+      return true; // The server still refuses duplicates with a clear message if this check is unavailable.
+    } finally {
+      setChecking(false);
+    }
+  };
+
   const goTo = async (target: number) => {
     if (target > current && !(await form.trigger(steps[current].fields))) return;
+    if (current === 0 && target > 0 && !(await personIsNew())) return;
     // Preselect the first company package the first time HR reaches the onboarding step.
     if (target === 3 && !form.getValues('templateId')) {
       const company = lookups.templates.find((item) => item.kind === 'Company') ?? lookups.templates[0];
@@ -162,6 +190,7 @@ function NewHireWizard({ onRestart }: { onRestart: () => void }) {
               <p>{steps[current].description}</p>
             </header>
             {current === 0 ? <PersonStep form={form} /> : null}
+            {current === 0 && duplicates.length ? <DuplicateNotice duplicates={duplicates} /> : null}
             {current === 1 ? <JobStep form={form} /> : null}
             {current === 2 ? <LoginStep form={form} /> : null}
             {current === 3 ? <OnboardingStep form={form} excluded={excluded} onToggle={toggle} /> : null}
@@ -176,7 +205,7 @@ function NewHireWizard({ onRestart }: { onRestart: () => void }) {
                 </Button>
               ) : null}
               {current < steps.length - 1 ? (
-                <Button type="button" onClick={() => void goTo(current + 1)}>
+                <Button type="button" loading={checking} onClick={() => void goTo(current + 1)}>
                   Next <ArrowRight size={16} />
                 </Button>
               ) : (
@@ -188,6 +217,30 @@ function NewHireWizard({ onRestart }: { onRestart: () => void }) {
           </Card>
         </>
       )}
+    </div>
+  );
+}
+
+function DuplicateNotice({ duplicates }: { duplicates: DuplicateEmployee[] }) {
+  const people = [...new Map(duplicates.map((item) => [item.employee.id, item.employee])).values()];
+  return (
+    <div className="duplicate-notice" role="alert">
+      <strong>This person may already exist.</strong>
+      {people.map((employee) => (
+        <p key={employee.id}>
+          {employee.firstName} {employee.lastName} ({employee.employeeNumber}, {employee.workEmail}) already has
+          {duplicates.filter((item) => item.employee.id === employee.id).length > 1
+            ? ' this email and number'
+            : duplicates.find((item) => item.employee.id === employee.id)!.field === 'workEmail'
+              ? ' this work email'
+              : ' this employee number'}
+          . <Link to={`/employees/${employee.id}`}>Open their profile</Link>
+        </p>
+      ))}
+      <small>
+        If it is the same person, open their profile instead of creating them again. If not, change the highlighted
+        field.
+      </small>
     </div>
   );
 }

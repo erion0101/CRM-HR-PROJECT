@@ -67,7 +67,17 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         catch (DbUpdateConcurrencyException) { throw new ConflictException("The record was changed by another user."); }
         catch (DbUpdateException exception) when (exception.InnerException?.Message.Contains("duplicate key", StringComparison.OrdinalIgnoreCase) == true)
         {
-            throw new ConflictException("A record with the same unique value already exists.");
+            var constraint = (exception.InnerException as Npgsql.PostgresException)?.ConstraintName;
+            throw new ConflictException(constraint is not null && UniqueViolationMessages.TryGetValue(constraint, out var message)
+                ? message
+                : "A record with the same unique value already exists.");
         }
     }
+
+    /// <summary>Plain-language messages for the unique rules people actually hit, keyed by database constraint name.</summary>
+    private static readonly IReadOnlyDictionary<string, string> UniqueViolationMessages = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["IX_Employees_OrganizationId_WorkEmail"] = "This work email is already used by another employee.",
+        ["IX_Employees_OrganizationId_EmployeeNumber"] = "This employee number is already used by another employee."
+    };
 }
