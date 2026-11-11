@@ -64,7 +64,14 @@ export function useOnboardingSetup(enabled = true) {
     }))
   });
 
-  const loading = projects.isLoading || companyArticles.isLoading || packages.isLoading;
+  // Wait for every dependent query too: computing from half-loaded data would show a wrong "next step".
+  const loading =
+    projects.isLoading ||
+    companyArticles.isLoading ||
+    packages.isLoading ||
+    projectArticles.some((query) => query.isLoading) ||
+    documents.some((query) => query.isLoading) ||
+    quizzes.some((query) => query.isLoading);
   const checklist = buildSetupChecklist({
     companyDocuments: documentsFor(undefined),
     projects: activeProjects.map((project) => ({ id: project.id, name: project.name, ...documentsFor(project.id) })),
