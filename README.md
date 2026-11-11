@@ -107,7 +107,7 @@ Onboarding remains fully usable when AI is disabled. Published template versions
 
 ## AI assistant
 
-The read-only AI assistant is disabled by default. It uses the official OpenAI .NET SDK on the backend; React never receives a provider key. An OpenAI Platform project API key is required—not a separate Codex credential.
+The read-only AI assistant is disabled by default. When enabled, **Ask AI** in the header opens it as a panel docked on the right of any page (like an IDE chat), and the panel's expand button opens the full page at `/ai-assistant`. It uses the official OpenAI .NET SDK on the backend; React never receives a provider key. An OpenAI Platform project API key is required—not a separate Codex credential.
 
 Keep these settings disabled until the HR-AI governance and production-security launch gates are complete:
 

@@ -28,6 +28,7 @@ import {
   roleLabels
 } from '@/app/access';
 import { Avatar } from '@/components/ui/avatar';
+import { AiPanel } from '@/features/ai-assistant/components/ai-panel';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { NotificationBell } from '@/features/notifications/components/notification-bell';
 
@@ -46,6 +47,14 @@ export function AppShell() {
   const { pathname } = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [aiOpen, setAiOpenState] = useState(readAiPanelOpen);
+  const setAiOpen = (open: boolean) => {
+    setAiOpenState(open);
+    rememberAiPanelOpen(open);
+  };
+  // The full AI page already shows the chat, so the side panel stays closed there.
+  const onAiPage = pathname === '/ai-assistant' || pathname.startsWith('/ai-assistant/');
+  const showAiPanel = aiOpen && !onAiPage;
   const navigation: { label: string; items: NavigationItem[] }[] = [
     {
       label: 'Workspace',
@@ -103,7 +112,6 @@ export function AppShell() {
         }
       ]
     },
-    { label: 'Intelligence', items: [{ label: 'AI assistant', to: '/ai-assistant', icon: Bot }] },
     {
       label: 'Administration',
       items: [
@@ -115,7 +123,7 @@ export function AppShell() {
   ];
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${showAiPanel ? 'app-shell--ai-open' : ''}`}>
       <button
         className={`sidebar-scrim ${mobileOpen ? 'is-visible' : ''}`}
         aria-label="Close navigation"
@@ -169,6 +177,17 @@ export function AppShell() {
           <button className="mobile-menu" onClick={() => setMobileOpen(true)} aria-label="Open navigation">
             <Menu size={21} />
           </button>
+          <button
+            type="button"
+            className={`ai-trigger ${showAiPanel || onAiPage ? 'is-active' : ''}`}
+            aria-label="AI assistant"
+            aria-expanded={showAiPanel}
+            title="AI assistant"
+            onClick={() => (onAiPage ? undefined : setAiOpen(!aiOpen))}
+          >
+            <Bot size={18} />
+            <span>Ask AI</span>
+          </button>
           <NotificationBell />
           <div className="topbar__profile">
             <button
@@ -203,6 +222,26 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
+      {showAiPanel ? <AiPanel onClose={() => setAiOpen(false)} /> : null}
     </div>
   );
+}
+
+const aiPanelKey = 'hr.ai-panel-open';
+
+/** Whether the AI panel was open last time; a per-browser convenience, so storage errors are ignored. */
+function readAiPanelOpen(): boolean {
+  try {
+    return window.localStorage.getItem(aiPanelKey) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function rememberAiPanelOpen(open: boolean) {
+  try {
+    window.localStorage.setItem(aiPanelKey, open ? '1' : '0');
+  } catch {
+    // Private windows can block storage; the panel still works for this visit.
+  }
 }
