@@ -2,9 +2,8 @@ import { useRef, useState } from 'react';
 
 import { queryClient } from '@/app/providers/query-provider';
 import { createUser } from '@/features/administration/api/administration-api';
-import { createEmployee, setEmployment } from '@/features/employees/api/employees-api';
+import { addAssignment, createEmployee, setEmployment } from '@/features/employees/api/employees-api';
 import { assignOnboarding } from '@/features/onboarding/api/onboarding-api';
-import { assignDepartmentEmployee } from '@/features/organization/api/organization-api';
 import { addProjectMember } from '@/features/projects/api/projects-api';
 import { toAppError } from '@/lib/api-error';
 import type { Role } from '@/types/api';
@@ -68,7 +67,10 @@ export function useNewHireRun() {
       employeeId.current = (await createEmployee(plan.person)).id;
     },
     job: async (plan) => {
-      await assignDepartmentEmployee(plan.job.departmentId, employeeId.current!, {
+      // The employee assignment endpoint also makes the department manager their manager (reporting line);
+      // the department endpoint only records the position.
+      await addAssignment(employeeId.current!, {
+        departmentId: plan.job.departmentId,
         positionId: plan.job.positionId,
         effectiveFrom: plan.job.startDate
       });
