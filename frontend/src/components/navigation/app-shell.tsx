@@ -100,7 +100,6 @@ export function AppShell() {
     {
       label: 'Administration',
       items: [
-        { label: 'User access', to: '/administration/users', icon: UserCog, visible: canManageUsers(user) },
         { label: 'Audit history', to: '/administration/audit', icon: FileClock, visible: canViewAudit(user) },
         { label: 'AI settings', to: '/administration/ai-settings', icon: Bot, visible: canManageUsers(user) }
       ]
@@ -144,7 +143,8 @@ export function AppShell() {
                     <NavLink
                       key={`${label}-${to}`}
                       to={to}
-                      className={active ? 'active' : undefined}
+                      // A function replaces the router's own highlighting, which would also mark People on My info.
+                      className={() => (active ? 'active' : '')}
                       onClick={() => setMobileOpen(false)}
                     >
                       <Icon size={18} />
@@ -196,6 +196,11 @@ export function AppShell() {
                 <NavLink to="/account/security" onClick={() => setProfileOpen(false)}>
                   <Settings2 size={16} /> Security settings
                 </NavLink>
+                {canManageUsers(user) ? (
+                  <NavLink to="/administration/users" onClick={() => setProfileOpen(false)}>
+                    <UserCog size={16} /> Admin accounts
+                  </NavLink>
+                ) : null}
                 <button onClick={() => void logout()}>
                   <LogOut size={16} /> Sign out
                 </button>

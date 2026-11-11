@@ -5695,3 +5695,80 @@ textarea:focus-visible {
   margin: 0 auto;
   color: var(--forest-700);
 }
+
+/* Login tab on the employee profile */
+.login-card {
+  padding: 0;
+}
+.login-card__summary {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.login-card__summary > div {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.login-card__summary strong {
+  overflow-wrap: anywhere;
+}
+.login-card__summary small {
+  color: var(--muted);
+}
+.login-card__icon {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  color: var(--forest-700);
+  background: var(--forest-50);
+}
+.login-card__row {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 360px) auto;
+  align-items: start;
+  gap: 12px;
+}
+.login-card__row > .button {
+  margin-top: 26px;
+}
+.login-card__form {
+  padding: 20px;
+}
+.login-card__footer {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid var(--line);
+  background: #fafcfb;
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+.login-card__footer p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+@media (max-width: 640px) {
+  .login-card__summary {
+    flex-wrap: wrap;
+  }
+  .login-card__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .login-card__row > .button {
+    margin-top: 0;
+  }
+  .login-card__footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

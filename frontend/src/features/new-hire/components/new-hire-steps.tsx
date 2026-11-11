@@ -164,7 +164,7 @@ export function LoginStep({ form }: StepProps) {
           </FieldShell>
         </div>
       ) : (
-        <p className="field__hint">You can create the login later in Administration → User access.</p>
+        <p className="field__hint">You can create the login later on their profile, in the Login tab.</p>
       )}
     </div>
   );

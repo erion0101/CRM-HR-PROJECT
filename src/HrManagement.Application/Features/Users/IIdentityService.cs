@@ -11,5 +11,8 @@ public interface IIdentityService
     Task<UserDto> CreateAsync(string email, string temporaryPassword, string role, Guid? employeeId, CancellationToken cancellationToken);
     Task<UserDto> UpdateAsync(Guid id, bool isActive, string role, Guid? employeeId, CancellationToken cancellationToken);
     Task SetScopesAsync(Guid id, IReadOnlyList<UserScopeInput> scopes, CancellationToken cancellationToken);
-    Task<PageResult<UserDto>> ListAsync(string? cursor, int limit, CancellationToken cancellationToken);
+    /// <param name="unlinkedOnly">Only logins that do not belong to an employee (such as the first admin account).</param>
+    Task<PageResult<UserDto>> ListAsync(string? cursor, int limit, bool unlinkedOnly, CancellationToken cancellationToken);
+    /// <summary>The login that belongs to this employee, or null when they have none.</summary>
+    Task<UserDto?> GetByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken);
 }

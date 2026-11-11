@@ -3,8 +3,14 @@ import type { PageResult, Role } from '@/types/api';
 
 import type { AuditEvent, ManagedUser } from '../types';
 
-export async function getUsers(cursor?: string, limit = 50): Promise<PageResult<ManagedUser>> {
-  const { data } = await http.get<PageResult<ManagedUser>>('/users', { params: { cursor, limit } });
+export async function getUsers(cursor?: string, limit = 50, unlinkedOnly = false): Promise<PageResult<ManagedUser>> {
+  const { data } = await http.get<PageResult<ManagedUser>>('/users', { params: { cursor, limit, unlinkedOnly } });
+  return data;
+}
+
+/** The login of one employee; `login` is null when they have none yet. */
+export async function getEmployeeLogin(employeeId: string): Promise<{ login: ManagedUser | null }> {
+  const { data } = await http.get<{ login: ManagedUser | null }>(`/users/by-employee/${employeeId}`);
   return data;
 }
 

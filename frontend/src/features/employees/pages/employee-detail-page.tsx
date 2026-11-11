@@ -16,7 +16,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 
-import { canManageOnboarding, canManagePeople, canViewSalary } from '@/app/access';
+import { canManageOnboarding, canManagePeople, canManageUsers, canViewSalary } from '@/app/access';
 import { useNotification } from '@/app/providers/notification-provider';
 import { queryClient } from '@/app/providers/query-provider';
 import { EmptyState } from '@/components/feedback/empty-state';
@@ -30,6 +30,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Dialog } from '@/components/ui/dialog';
+import { EmployeeLoginTab } from '@/features/administration/components/employee-login-tab';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import {
   addCompensation,
@@ -97,7 +98,8 @@ export function EmployeeDetailPage() {
     { id: 'contracts', label: 'Contracts' },
     ...(salaryAccess ? [{ id: 'compensation', label: 'Compensation' }] : []),
     { id: 'documents', label: 'Documents' },
-    { id: 'activity', label: 'Activity' }
+    { id: 'activity', label: 'Activity' },
+    ...(canManageUsers(user) ? [{ id: 'login', label: 'Login' }] : [])
   ];
 
   if (employee.isLoading || profile.isLoading)
@@ -156,6 +158,13 @@ export function EmployeeDetailPage() {
             <EmployeeOnboardingTab employeeId={employeeId} employeeName={`${item.firstName} ${item.lastName}`} />
           ) : null}
           {tab === 'time-off' ? <EmployeeTimeOffTab employeeId={employeeId} /> : null}
+          {tab === 'login' && canManageUsers(user) ? (
+            <EmployeeLoginTab
+              employeeId={employeeId}
+              workEmail={item.workEmail}
+              name={`${item.firstName} ${item.lastName}`}
+            />
+          ) : null}
           {tab === 'employment' ? (
             <EmploymentTab
               employeeId={employeeId}

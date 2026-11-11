@@ -1,8 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
-import { Plus, UserPlus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router';
 
 import { useNotification } from '@/app/providers/notification-provider';
 import { queryClient } from '@/app/providers/query-provider';
@@ -22,15 +21,8 @@ import type { Role } from '@/types/api';
 import { createUser, updateUser } from '../api/administration-api';
 import { useUsers } from '../hooks/use-administration';
 import type { ManagedUser } from '../types';
+import { roleDescriptions, roleOptions as roles } from '../utils/roles';
 
-const roles: Role[] = ['Employee', 'Manager', 'HR', 'ProductManager'];
-
-const roleDescriptions: Record<Role, string> = {
-  Employee: 'Self-service access to personal records, documents, onboarding, knowledge, and assigned projects.',
-  Manager: 'Employee access plus direct-report visibility and team onboarding responsibilities.',
-  HR: 'Organization-wide people, organization, compensation, document, user, audit, and AI administration.',
-  ProductManager: 'Project, membership, and project-knowledge management without access to restricted HR data.'
-};
 interface UserFormInput {
   email: string;
   temporaryPassword: string;
@@ -42,21 +34,18 @@ interface UserFormInput {
 export function UsersPage() {
   const [editing, setEditing] = useState<ManagedUser | 'new' | null>(null);
   const { notify } = useNotification();
-  const users = useUsers(undefined, 100);
+  const users = useUsers(undefined, 100, true);
   const employees = useEmployees({ limit: 100 });
   return (
     <div className="page-stack">
       <PageHeader
         eyebrow="Administration"
-        title="User access"
-        description="Logins and roles. Each login belongs to an employee; open the employee to see or start their onboarding."
+        title="Admin accounts"
+        description="Logins that do not belong to a person, such as the first admin account. A person's login is on their profile, in the Login tab."
         actions={
           <div className="row-actions">
-            <Link className="button button--secondary button--medium" to="/employees/new-hire">
-              <UserPlus size={17} /> Add a new hire
-            </Link>
             <Button onClick={() => setEditing('new')}>
-              <Plus size={17} /> Create login only
+              <Plus size={17} /> Add an admin account
             </Button>
           </div>
         }
@@ -69,14 +58,12 @@ export function UsersPage() {
                 <tr>
                   <th>User</th>
                   <th>Role</th>
-                  <th>Linked employee</th>
                   <th>Status</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
                 {users.data.items.map((account) => {
-                  const linked = employees.data?.items.find((item) => item.id === account.employeeId);
                   return (
                     <tr key={account.id}>
                       <td>
@@ -90,17 +77,8 @@ export function UsersPage() {
                       </td>
                       <td>{account.roles.map((role) => roleLabels[role as Role] ?? role).join(', ')}</td>
                       <td>
-                        {linked ? (
-                          <Link to={`/employees/${linked.id}?tab=onboarding`}>
-                            {linked.firstName} {linked.lastName}
-                          </Link>
-                        ) : (
-                          'Not linked'
-                        )}
-                      </td>
-                      <td>
                         <Badge tone={account.isActive ? 'positive' : 'negative'}>
-                          {account.isActive ? 'Active' : 'Suspended'}
+                          {account.isActive ? 'Active' : 'Turned off'}
                         </Badge>
                       </td>
                       <td>
@@ -116,9 +94,9 @@ export function UsersPage() {
           </div>
         ) : (
           <EmptyState
-            title="No user accounts"
-            description="Create the first account for a team member."
-            actionLabel="Create user"
+            title="No admin accounts"
+            description="Every login belongs to a person. Manage them on each person's profile, in the Login tab."
+            actionLabel="Add an admin account"
             onAction={() => setEditing('new')}
           />
         )}
@@ -169,7 +147,7 @@ function UserDialog({
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['users'] });
       onSaved();
-      notify({ title: isNew ? 'User created' : 'User access updated', tone: 'success' });
+      notify({ title: isNew ? 'Account added' : 'Account saved', tone: 'success' });
     },
     onError: (error) => notify({ title: 'Could not save user', message: toAppError(error).message, tone: 'error' })
   });
@@ -178,7 +156,7 @@ function UserDialog({
     <Dialog
       open={Boolean(account)}
       onClose={onClose}
-      title={isNew ? 'Create user account' : 'Manage user account'}
+      title={isNew ? 'Add an admin account' : 'Manage admin account'}
       description="Access remains subject to server-side role and data-scope policies."
     >
       <form className="form-stack" onSubmit={form.handleSubmit((input) => mutation.mutate(input))}>
@@ -207,7 +185,11 @@ function UserDialog({
             ))}
           </Select>
         </FieldShell>
-        <FieldShell label="Linked employee" htmlFor="linkedEmployee">
+        <FieldShell
+          label="Belongs to a person"
+          htmlFor="linkedEmployee"
+          hint="Choose a person to move this login to their profile."
+        >
           <Select id="linkedEmployee" {...form.register('employeeId')}>
             <option value="">Not linked</option>
             {employees.map((employee) => (
@@ -220,11 +202,11 @@ function UserDialog({
         {!isNew ? (
           <label className="checkbox-row">
             <input type="checkbox" {...form.register('isActive')} />
-            <span>Account is active</span>
+            <span>Login is turned on</span>
           </label>
         ) : null}
         <Button type="submit" loading={mutation.isPending}>
-          {isNew ? 'Create user' : 'Save access'}
+          {isNew ? 'Add account' : 'Save'}
         </Button>
       </form>
     </Dialog>

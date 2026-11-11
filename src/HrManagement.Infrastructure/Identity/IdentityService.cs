@@ -45,6 +45,7 @@ internal sealed class IdentityService(
         var organizationId = RequireOrganization();
         if (employeeId is { } id && !await db.Employees.AnyAsync(x => x.Id == id && x.OrganizationId == organizationId, cancellationToken))
             throw new ValidationException(new Dictionary<string, string[]> { ["employeeId"] = ["Employee does not exist."] });
+        await EnsureEmployeeHasNoOtherLoginAsync(employeeId, null, cancellationToken);
         var normalizedEmail = email.Trim().ToLowerInvariant();
         var user = new ApplicationUser { Id = Guid.CreateVersion7(), OrganizationId = organizationId, EmployeeId = employeeId, UserName = normalizedEmail, Email = normalizedEmail, EmailConfirmed = true, IsActive = true };
         EnsureSucceeded(await userManager.CreateAsync(user, temporaryPassword));
@@ -60,6 +61,10 @@ internal sealed class IdentityService(
         var user = await userManager.Users.SingleOrDefaultAsync(x => x.Id == id && x.OrganizationId == organizationId, cancellationToken) ?? throw new NotFoundException("User not found.");
         if (employeeId is { } employee && !await db.Employees.AnyAsync(x => x.Id == employee && x.OrganizationId == organizationId, cancellationToken))
             throw new ValidationException(new Dictionary<string, string[]> { ["employeeId"] = ["Employee does not exist."] });
+        await EnsureEmployeeHasNoOtherLoginAsync(employeeId, user.Id, cancellationToken);
+        // An HR user cannot lock themselves out; another HR user has to do it.
+        if (user.Id == currentUser.UserId && (!isActive || role != Roles.Hr))
+            throw new ValidationException(new Dictionary<string, string[]> { ["role"] = ["You cannot turn off your own login or remove your own HR role. Ask another HR user."] });
         user.IsActive = isActive;
         user.EmployeeId = employeeId;
         EnsureSucceeded(await userManager.UpdateAsync(user));
@@ -74,10 +79,10 @@ internal sealed class IdentityService(
         return await MapAsync(user);
     }
 
-    public async Task<PageResult<UserDto>> ListAsync(string? cursor, int limit, CancellationToken cancellationToken)
+    public async Task<PageResult<UserDto>> ListAsync(string? cursor, int limit, bool unlinkedOnly, CancellationToken cancellationToken)
     {
         var organizationId = RequireOrganization();
-        var query = userManager.Users.Where(x => x.OrganizationId == organizationId).OrderBy(x => x.Id);
+        var query = userManager.Users.Where(x => x.OrganizationId == organizationId && (!unlinkedOnly || x.EmployeeId == null)).OrderBy(x => x.Id);
         if (Guid.TryParse(cursor, out var after)) query = query.Where(x => x.Id.CompareTo(after) > 0).OrderBy(x => x.Id);
         var users = await query.Take(limit + 1).ToListAsync(cancellationToken);
         var hasMore = users.Count > limit;
@@ -99,6 +104,21 @@ internal sealed class IdentityService(
         foreach (var scope in scopes.Distinct()) db.UserScopes.Add(HrManagement.Domain.UserScope.Create(organizationId, id, scope.ScopeType, scope.ScopeEntityId));
         await db.SaveChangesAsync(cancellationToken);
         await audit.RecordAccessAsync("UpdateScopes", nameof(ApplicationUser), id.ToString(), cancellationToken);
+    }
+
+    public async Task<UserDto?> GetByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken)
+    {
+        var organizationId = RequireOrganization();
+        var user = await userManager.Users.SingleOrDefaultAsync(x => x.OrganizationId == organizationId && x.EmployeeId == employeeId, cancellationToken);
+        return user is null ? null : await MapAsync(user);
+    }
+
+    /// <summary>One login per person, so the employee profile can show "their" login.</summary>
+    private async Task EnsureEmployeeHasNoOtherLoginAsync(Guid? employeeId, Guid? excludingUserId, CancellationToken cancellationToken)
+    {
+        if (employeeId is not { } id) return;
+        if (await userManager.Users.AnyAsync(x => x.EmployeeId == id && (excludingUserId == null || x.Id != excludingUserId), cancellationToken))
+            throw new ConflictException("This person already has a login.");
     }
 
     private async Task AddIdentityClaimsAsync(ApplicationUser user)

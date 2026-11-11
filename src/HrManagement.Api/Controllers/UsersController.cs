@@ -2,6 +2,7 @@ using HrManagement.Api.Configuration;
 using HrManagement.Application.Features.Users.Commands.CreateUser;
 using HrManagement.Application.Features.Users.Commands.SetUserScopes;
 using HrManagement.Application.Features.Users.Commands.UpdateUser;
+using HrManagement.Application.Features.Users.Queries.GetEmployeeLogin;
 using HrManagement.Application.Features.Users.Queries.GetUsers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -13,8 +14,14 @@ namespace HrManagement.Api.Controllers;
 public sealed class UsersController(ISender sender) : ApiControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> List([FromQuery] string? cursor, [FromQuery] int limit = 50, CancellationToken cancellationToken = default) =>
-        Ok(await sender.Send(new GetUsersQuery(cursor, limit), cancellationToken));
+    public async Task<IActionResult> List([FromQuery] string? cursor, [FromQuery] int limit = 50, [FromQuery] bool unlinkedOnly = false,
+        CancellationToken cancellationToken = default) =>
+        Ok(await sender.Send(new GetUsersQuery(cursor, limit, unlinkedOnly), cancellationToken));
+
+    /// <summary>The login that belongs to one employee, for the Login tab on their profile.</summary>
+    [HttpGet("by-employee/{employeeId:guid}")]
+    public async Task<IActionResult> ForEmployee(Guid employeeId, CancellationToken cancellationToken) =>
+        Ok(await sender.Send(new GetEmployeeLoginQuery(employeeId), cancellationToken));
 
     [HttpPost]
     public async Task<IActionResult> Create(CreateUserCommand command, CancellationToken cancellationToken)
