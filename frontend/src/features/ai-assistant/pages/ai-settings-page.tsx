@@ -36,7 +36,7 @@ export function AiSettingsPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="Administration"
+        eyebrow="Settings"
         title="AI assistant"
         description="Review provider health, governance gates, local retention, quotas, and usage. Credentials are never shown in the browser."
         actions={

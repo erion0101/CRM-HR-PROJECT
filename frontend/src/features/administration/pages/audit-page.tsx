@@ -25,7 +25,7 @@ export function AuditPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="Administration"
+        eyebrow="Settings"
         title="Audit history"
         description="Review security-sensitive and business record activity captured by the backend."
       >

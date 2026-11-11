@@ -3,21 +3,19 @@ import {
   CalendarDays,
   ChevronDown,
   CircleUserRound,
-  FileClock,
   LayoutDashboard,
   ListChecks,
   LogOut,
   Menu,
   Settings2,
   Sparkles,
-  UserCog,
   Users,
   X
 } from 'lucide-react';
 import { useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router';
 
-import { canApproveLeave, canManageUsers, canViewAudit, roleLabels } from '@/app/access';
+import { canApproveLeave, roleLabels } from '@/app/access';
 import { Avatar } from '@/components/ui/avatar';
 import { AiPanel } from '@/features/ai-assistant/components/ai-panel';
 import { useAuth } from '@/features/auth/hooks/use-auth';
@@ -95,13 +93,6 @@ export function AppShell() {
           icon: CalendarDays,
           activePaths: ['/time-off']
         }
-      ]
-    },
-    {
-      label: 'Administration',
-      items: [
-        { label: 'Audit history', to: '/administration/audit', icon: FileClock, visible: canViewAudit(user) },
-        { label: 'AI settings', to: '/administration/ai-settings', icon: Bot, visible: canManageUsers(user) }
       ]
     }
   ];
@@ -193,14 +184,14 @@ export function AppShell() {
                   <strong>{user?.email}</strong>
                   <small>{user?.roles.map((role) => roleLabels[role]).join(' · ')}</small>
                 </div>
-                <NavLink to="/account/security" onClick={() => setProfileOpen(false)}>
-                  <Settings2 size={16} /> Security settings
-                </NavLink>
-                {canManageUsers(user) ? (
-                  <NavLink to="/administration/users" onClick={() => setProfileOpen(false)}>
-                    <UserCog size={16} /> Admin accounts
+                {user?.employeeId ? (
+                  <NavLink to={`/employees/${user.employeeId}`} onClick={() => setProfileOpen(false)}>
+                    <CircleUserRound size={16} /> My info
                   </NavLink>
                 ) : null}
+                <NavLink to="/settings" onClick={() => setProfileOpen(false)}>
+                  <Settings2 size={16} /> Settings
+                </NavLink>
                 <button onClick={() => void logout()}>
                   <LogOut size={16} /> Sign out
                 </button>

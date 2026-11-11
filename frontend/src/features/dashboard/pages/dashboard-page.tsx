@@ -184,7 +184,7 @@ export function DashboardPage() {
             <CompactEmpty
               icon={<CalendarDays size={28} />}
               title="No public holidays coming up"
-              description="Holidays in the next 90 days appear here. HR adds them in Time off → Leave settings."
+              description="Holidays in the next 90 days appear here. HR adds them in Settings → Time off and holidays."
             />
           }
         />

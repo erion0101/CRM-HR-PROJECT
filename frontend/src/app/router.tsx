@@ -103,6 +103,9 @@ const TeamCalendarPage = lazyWithRetry(() =>
 const LeaveSettingsPage = lazyWithRetry(() =>
   import('@/features/time-off/pages/leave-settings-page').then((module) => ({ default: module.LeaveSettingsPage }))
 );
+const SettingsLayout = lazyWithRetry(() =>
+  import('@/features/settings/pages/settings-layout').then((module) => ({ default: module.SettingsLayout }))
+);
 const ForbiddenPage = lazyWithRetry(() =>
   import('@/features/system/pages/status-pages').then((module) => ({ default: module.ForbiddenPage }))
 );
@@ -166,19 +169,25 @@ export const router = createBrowserRouter([
             element: <RoleRoute roles={['HR', 'Manager']}>{deferred(<LeaveApprovalsPage />)}</RoleRoute>
           },
           { path: 'time-off/calendar', element: deferred(<TeamCalendarPage />) },
-          {
-            path: 'time-off/settings',
-            element: <RoleRoute roles={['HR']}>{deferred(<LeaveSettingsPage />)}</RoleRoute>
-          },
+          { path: 'time-off/settings', element: <Navigate to="/settings/time-off" replace /> },
           { path: 'ai-assistant', element: deferred(<AiAssistantPage />) },
           { path: 'ai-assistant/:conversationId', element: deferred(<AiAssistantPage />) },
-          { path: 'administration/users', element: <RoleRoute roles={['HR']}>{deferred(<UsersPage />)}</RoleRoute> },
-          { path: 'administration/audit', element: <RoleRoute roles={['HR']}>{deferred(<AuditPage />)}</RoleRoute> },
+          { path: 'administration/users', element: <Navigate to="/settings/admin-accounts" replace /> },
+          { path: 'administration/audit', element: <Navigate to="/settings/audit" replace /> },
+          { path: 'administration/ai-settings', element: <Navigate to="/settings/ai" replace /> },
+          { path: 'account/security', element: <Navigate to="/settings/account" replace /> },
           {
-            path: 'administration/ai-settings',
-            element: <RoleRoute roles={['HR']}>{deferred(<AiSettingsPage />)}</RoleRoute>
+            path: 'settings',
+            element: deferred(<SettingsLayout />),
+            children: [
+              { index: true, element: <Navigate to="/settings/account" replace /> },
+              { path: 'account', element: deferred(<SecurityPage />) },
+              { path: 'time-off', element: <RoleRoute roles={['HR']}>{deferred(<LeaveSettingsPage />)}</RoleRoute> },
+              { path: 'ai', element: <RoleRoute roles={['HR']}>{deferred(<AiSettingsPage />)}</RoleRoute> },
+              { path: 'admin-accounts', element: <RoleRoute roles={['HR']}>{deferred(<UsersPage />)}</RoleRoute> },
+              { path: 'audit', element: <RoleRoute roles={['HR']}>{deferred(<AuditPage />)}</RoleRoute> }
+            ]
           },
-          { path: 'account/security', element: deferred(<SecurityPage />) },
           { path: 'forbidden', element: deferred(<ForbiddenPage />) },
           { path: '*', element: deferred(<NotFoundPage />) }
         ]

@@ -19,7 +19,6 @@ import {
   getPublicHolidays
 } from '../api/time-off-api';
 import { LeaveTypeDialog } from '../components/leave-type-dialog';
-import { TimeOffTabs } from '../components/time-off-tabs';
 import { useTimeOffMutation } from '../hooks/use-time-off-mutation';
 import type { LeaveType, PublicHoliday } from '../types';
 import { formatDay, formatDays, todayIso } from '../utils';
@@ -74,17 +73,15 @@ export function LeaveSettingsPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="Time off"
-        title="Leave settings"
+        eyebrow="Settings"
+        title="Time off and holidays"
         description="The kinds of leave people can ask for, how many days they get, and the public holidays nobody works."
         actions={
           <Button onClick={() => setEditing('new')}>
             <Plus size={16} /> Add a leave type
           </Button>
         }
-      >
-        <TimeOffTabs />
-      </PageHeader>
+      />
 
       <Card>
         <div className="section-heading section-heading--padded">

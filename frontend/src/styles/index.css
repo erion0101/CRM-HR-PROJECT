@@ -5772,3 +5772,119 @@ textarea:focus-visible {
     align-items: stretch;
   }
 }
+
+/* Settings: section menu on the left, the section on the right */
+.settings-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  align-items: start;
+  gap: 28px;
+}
+.settings-nav {
+  position: sticky;
+  top: 96px;
+  padding: 18px 12px;
+  border: 1px solid #e1e7e4;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.settings-nav h1 {
+  margin: 0 8px 14px;
+  font-size: 20px;
+}
+.settings-nav__group + .settings-nav__group {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.settings-nav__group > p {
+  margin: 0 8px 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.settings-nav a {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 10px;
+  border-radius: 10px;
+  color: var(--ink);
+}
+.settings-nav a svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--muted);
+}
+.settings-nav a span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.settings-nav a strong {
+  font-size: 14px;
+}
+.settings-nav a small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.settings-nav a:hover {
+  background: var(--forest-50);
+}
+.settings-nav a.active {
+  background: var(--forest-50);
+  box-shadow: inset 3px 0 var(--forest-600);
+}
+.settings-nav a.active svg {
+  color: var(--forest-700);
+}
+.settings-content {
+  min-width: 0;
+}
+@media (max-width: 900px) {
+  .settings-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+  .settings-nav {
+    position: static;
+    padding: 10px;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+  }
+  .settings-nav h1,
+  .settings-nav__group > p,
+  .settings-nav a small {
+    display: none;
+  }
+  .settings-nav__group {
+    display: flex;
+    gap: 6px;
+  }
+  .settings-nav__group + .settings-nav__group {
+    margin-top: 0;
+    padding-top: 0;
+    padding-left: 6px;
+    border-top: 0;
+    border-left: 1px solid var(--line);
+  }
+  .settings-nav a {
+    flex: none;
+    align-items: center;
+    white-space: nowrap;
+  }
+  .settings-nav a svg {
+    margin-top: 0;
+  }
+}
+.settings-layout--single {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 860px;
+}
+.security-card__action {
+  justify-self: start;
+}

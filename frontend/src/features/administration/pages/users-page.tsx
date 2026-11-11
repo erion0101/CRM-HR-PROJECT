@@ -39,7 +39,7 @@ export function UsersPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="Administration"
+        eyebrow="Settings"
         title="Admin accounts"
         description="Logins that do not belong to a person, such as the first admin account. A person's login is on their profile, in the Login tab."
         actions={

@@ -33,14 +33,14 @@ Phase 1 comes first because the three roles depend on each other: HR defines the
 - Sick leave has its own balance and never uses vacation days.
 - Whole days only. No half days.
 - A month counts when the person is employed for at least one day of it, so someone starting mid-year earns only for the months they work.
-- Both types are seeded at startup when an organization has no leave types. They are settings HR can change in **Time off → Leave settings**, not values in the code. Both need the manager's approval by default.
+- Both types are seeded at startup when an organization has no leave types. They are settings HR can change in **Settings → Time off and holidays**, not values in the code. Both need the manager's approval by default.
 
 ### Changes from the first plan
 
 - **Balances are calculated, not stored.** `LeaveBalanceCalculator` works out each balance from the rules, the employment periods, the requests and HR's adjustments. There is no `LeaveBalance` table and no year-start or 30-June worker job. Cancelling, rejecting or correcting a past request therefore always gives the right result, and nothing can run twice.
 - **The allowance rules live on `LeaveType`.** There is no separate `LeavePolicy` and no per-department rules, because one set of company rules was enough.
 - **No sick-note attachment yet** (`RequiresAttachment` is not built).
-- Leave settings are at `/time-off/settings`, next to the other time-off pages.
+- Leave settings are at `/settings/time-off`, with the company's other settings.
 
 ### Domain
 
@@ -77,7 +77,7 @@ Phase 1 comes first because the three roles depend on each other: HR defines the
 - **My time off** (`/time-off`): a balance card per leave type with where the days come from ("5 days earned of 20 · 7 days from last year, use by 30 Jun"), **Request time off** with a live count and the balance after the request, and upcoming and earlier requests with Cancel.
 - **Approvals** (`/time-off/approvals`, Manager and HR): pending requests with the balance after the request and the teammates already off then. Approve, or Reject with a reason.
 - **Team calendar** (`/time-off/calendar`): a month grid with public holidays, weekends and the number of people out each day, plus the list of who is out. HR can filter by department.
-- **Leave settings** (`/time-off/settings`, HR): leave types with their rules in plain words, and the public holidays.
+- **Settings → Time off and holidays** (`/settings/time-off`, HR): leave types with their rules in plain words, and the public holidays.
 - **Employee profile → Time off tab**: balances per year, requests, HR's adjustments, and **Adjust balance** for HR.
 - **Home**: "Company holidays" shows the next 90 days, and "Who's out" includes approved time off.
 - Menu: a **Time off** group. The HR admin, who has no employee profile, lands on Approvals.

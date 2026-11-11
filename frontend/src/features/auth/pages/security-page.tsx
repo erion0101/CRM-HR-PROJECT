@@ -1,7 +1,9 @@
 import { useMutation } from '@tanstack/react-query';
-import { KeyRound, ShieldCheck } from 'lucide-react';
+import { KeyRound, ShieldCheck, UserRound } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+import { Link } from 'react-router';
 
+import { roleLabels } from '@/app/access';
 import { useNotification } from '@/app/providers/notification-provider';
 import { FieldShell, Input } from '@/components/forms/field';
 import { PageHeader } from '@/components/navigation/page-header';
@@ -10,6 +12,7 @@ import { Card } from '@/components/ui/card';
 import { toAppError } from '@/lib/api-error';
 
 import { changePassword } from '../api/auth-api';
+import { useAuth } from '../hooks/use-auth';
 
 interface PasswordForm {
   currentPassword: string;
@@ -19,6 +22,7 @@ interface PasswordForm {
 
 export function SecurityPage() {
   const { notify } = useNotification();
+  const { user } = useAuth();
   const form = useForm<PasswordForm>();
   const mutation = useMutation({
     mutationFn: (input: PasswordForm) =>
@@ -30,12 +34,27 @@ export function SecurityPage() {
     onError: (error) => notify({ title: 'Password change failed', message: toAppError(error).message, tone: 'error' })
   });
   return (
-    <div className="page-stack page-stack--narrow">
-      <PageHeader
-        eyebrow="Your account"
-        title="Security settings"
-        description="Update the password used to access your local HR workspace."
-      />
+    <div className="page-stack">
+      <PageHeader eyebrow="Settings" title="Account and password" description="How you sign in, and what you can do." />
+      <Card className="security-card">
+        <span className="security-card__icon">
+          <UserRound size={22} />
+        </span>
+        <div>
+          <h2>{user?.email}</h2>
+          <p>
+            Role: {user?.roles.map((role) => roleLabels[role]).join(', ') || 'Team member'}. Only HR can change roles.
+          </p>
+        </div>
+        {user?.employeeId ? (
+          <Link
+            className="button button--secondary button--small security-card__action"
+            to={`/employees/${user.employeeId}`}
+          >
+            Open My info
+          </Link>
+        ) : null}
+      </Card>
       <Card className="security-card">
         <span className="security-card__icon">
           <ShieldCheck size={22} />
