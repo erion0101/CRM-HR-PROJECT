@@ -4,7 +4,6 @@ import {
   ChevronDown,
   CircleUserRound,
   FileClock,
-  FileText,
   LayoutDashboard,
   ListChecks,
   LogOut,
@@ -12,21 +11,13 @@ import {
   Settings2,
   Sparkles,
   UserCog,
-  UserPlus,
   Users,
   X
 } from 'lucide-react';
 import { useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router';
 
-import {
-  canApproveLeave,
-  canManagePeople,
-  canManageUsers,
-  canViewAudit,
-  canViewCompanyWorkspace,
-  roleLabels
-} from '@/app/access';
+import { canApproveLeave, canManageUsers, canViewAudit, roleLabels } from '@/app/access';
 import { Avatar } from '@/components/ui/avatar';
 import { AiPanel } from '@/features/ai-assistant/components/ai-panel';
 import { useAuth } from '@/features/auth/hooks/use-auth';
@@ -76,15 +67,9 @@ export function AppShell() {
           label: 'People',
           to: '/employees',
           icon: Users,
+          // New hire is opened from the People page, so it highlights People.
           activePaths: ['/employees', '/organization-chart', '/departments', '/positions'],
-          excludePaths: ['/employees/new-hire', ...(user?.employeeId ? [`/employees/${user.employeeId}`] : [])]
-        },
-        {
-          label: 'New hire',
-          to: '/employees/new-hire',
-          icon: UserPlus,
-          visible: canManagePeople(user),
-          exact: true
+          excludePaths: user?.employeeId ? [`/employees/${user.employeeId}`] : []
         }
       ]
     },
@@ -95,9 +80,9 @@ export function AppShell() {
           label: 'Onboarding',
           to: '/onboarding',
           icon: ListChecks,
-          activePaths: ['/onboarding', '/knowledge', '/projects']
-        },
-        { label: 'Documents', to: '/company', icon: FileText, visible: canViewCompanyWorkspace(user) }
+          // Documents is a tab inside Onboarding, so it highlights Onboarding.
+          activePaths: ['/onboarding', '/knowledge', '/projects', '/company']
+        }
       ]
     },
     {
