@@ -1,7 +1,8 @@
 import { useMutation } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
+import { Plus, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { Link } from 'react-router';
 
 import { useNotification } from '@/app/providers/notification-provider';
 import { queryClient } from '@/app/providers/query-provider';
@@ -48,11 +49,16 @@ export function UsersPage() {
       <PageHeader
         eyebrow="Administration"
         title="User access"
-        description="Create accounts, assign one role, and link users to employee records."
+        description="Logins and roles. Each login belongs to an employee; open the employee to see or start their onboarding."
         actions={
-          <Button onClick={() => setEditing('new')}>
-            <Plus size={17} /> Create user
-          </Button>
+          <div className="row-actions">
+            <Link className="button button--secondary button--medium" to="/employees/new-hire">
+              <UserPlus size={17} /> Add a new hire
+            </Link>
+            <Button onClick={() => setEditing('new')}>
+              <Plus size={17} /> Create login only
+            </Button>
+          </div>
         }
       />
       <Card className="table-card">
@@ -83,7 +89,15 @@ export function UsersPage() {
                         </div>
                       </td>
                       <td>{account.roles.map((role) => roleLabels[role as Role] ?? role).join(', ')}</td>
-                      <td>{linked ? `${linked.firstName} ${linked.lastName}` : 'Not linked'}</td>
+                      <td>
+                        {linked ? (
+                          <Link to={`/employees/${linked.id}?tab=onboarding`}>
+                            {linked.firstName} {linked.lastName}
+                          </Link>
+                        ) : (
+                          'Not linked'
+                        )}
+                      </td>
                       <td>
                         <Badge tone={account.isActive ? 'positive' : 'negative'}>
                           {account.isActive ? 'Active' : 'Suspended'}

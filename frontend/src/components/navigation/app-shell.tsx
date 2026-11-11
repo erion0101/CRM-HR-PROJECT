@@ -1,9 +1,9 @@
 import {
   Bot,
-  Building2,
   ChevronDown,
   CircleUserRound,
   FileClock,
+  FileText,
   LayoutDashboard,
   ListChecks,
   LogOut,
@@ -49,7 +49,12 @@ export function AppShell() {
           icon: CircleUserRound,
           visible: Boolean(user?.employeeId),
           exact: true
-        },
+        }
+      ]
+    },
+    {
+      label: 'People',
+      items: [
         {
           label: 'People',
           to: '/employees',
@@ -67,15 +72,15 @@ export function AppShell() {
       ]
     },
     {
-      label: 'Work',
+      label: 'Onboarding',
       items: [
-        { label: 'Company', to: '/company', icon: Building2, visible: canViewCompanyWorkspace(user) },
         {
           label: 'Onboarding',
           to: '/onboarding',
           icon: ListChecks,
           activePaths: ['/onboarding', '/knowledge', '/projects']
-        }
+        },
+        { label: 'Documents', to: '/company', icon: FileText, visible: canViewCompanyWorkspace(user) }
       ]
     },
     { label: 'Intelligence', items: [{ label: 'AI assistant', to: '/ai-assistant', icon: Bot }] },

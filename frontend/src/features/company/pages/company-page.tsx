@@ -35,6 +35,7 @@ import {
 } from '@/features/knowledge/api/knowledge-api';
 import type { KnowledgeArticle, KnowledgeAudience } from '@/features/knowledge/types';
 import { getProjects } from '@/features/projects/api/projects-api';
+import { OnboardingWorkspaceTabs } from '@/features/onboarding/components/onboarding-workspace-tabs';
 import { toAppError } from '@/lib/api-error';
 
 import type { EmployeeDocument } from '@/features/documents/types';
@@ -140,12 +141,13 @@ export function CompanyPage() {
         queryClient.invalidateQueries({ queryKey: ['onboarding'] })
       ]);
       notify({
-        title: 'PDF added to company knowledge',
-        message: 'It is published and will be available for onboarding after the security scan is clean.',
+        title: 'Document added',
+        message: 'It can be used in a package as soon as its security scan is clean, usually within a minute.',
         tone: 'success'
       });
     },
-    onError: (error) => notify({ title: 'Could not add the PDF', message: toAppError(error).message, tone: 'error' })
+    onError: (error) =>
+      notify({ title: 'Could not add the document', message: toAppError(error).message, tone: 'error' })
   });
 
   if (initialLoading)
@@ -171,15 +173,17 @@ export function CompanyPage() {
   return (
     <div className="page-stack company-page">
       <PageHeader
-        eyebrow="HR workspace"
-        title="Company"
-        description="One clear view of company documents, projects, and the approved PDF knowledge that can be reused in employee onboarding."
+        eyebrow="Onboarding"
+        title="Documents"
+        description="Company and project documents that new hires read during onboarding. Add a PDF; once its security scan is clean you can put it in a package."
         actions={
           <Button onClick={() => setUploadOpen(true)}>
-            <Upload size={17} /> Add PDF
+            <Upload size={17} /> Add document
           </Button>
         }
-      />
+      >
+        <OnboardingWorkspaceTabs />
+      </PageHeader>
 
       <div className="stats-grid company-stats">
         <Card className="stat-card">
@@ -189,7 +193,7 @@ export function CompanyPage() {
           <div>
             <p>Company documents</p>
             <strong>{companyDocuments.length}</strong>
-            <small>PDF knowledge outside projects</small>
+            <small>Shared with every employee</small>
           </div>
         </Card>
         <Card className="stat-card">
@@ -209,7 +213,7 @@ export function CompanyPage() {
           <div>
             <p>Project documents</p>
             <strong>{projectDocuments.length}</strong>
-            <small>PDF knowledge assigned to projects</small>
+            <small>Only for project members</small>
           </div>
         </Card>
         <Card className="stat-card">
@@ -217,9 +221,9 @@ export function CompanyPage() {
             <FileCheck2 size={20} />
           </span>
           <div>
-            <p>Onboarding ready</p>
+            <p>Ready to use</p>
             <strong>{onboardingReady}</strong>
-            <small>Published documents with a clean scan</small>
+            <small>Scanned and can go in a package</small>
           </div>
         </Card>
       </div>
@@ -232,11 +236,11 @@ export function CompanyPage() {
             </span>
             <div>
               <h2>Company documents</h2>
-              <p>Policies, company information, and shared procedures sourced from uploaded PDFs.</p>
+              <p>Policies, how the company works, and shared procedures. Every employee can read these.</p>
             </div>
           </div>
           <Button size="small" variant="secondary" onClick={() => setUploadOpen(true)}>
-            <Plus size={15} /> Add company PDF
+            <Plus size={15} /> Add company document
           </Button>
         </header>
         {companyDocuments.length ? (
@@ -247,9 +251,9 @@ export function CompanyPage() {
           </div>
         ) : (
           <EmptyState
-            title="No company PDFs yet"
-            description="Add the first company PDF. HR does not need to rewrite its content in the application."
-            actionLabel="Add company PDF"
+            title="No company documents yet"
+            description="Add your first company document as a PDF. You do not need to retype its content."
+            actionLabel="Add company document"
             onAction={() => setUploadOpen(true)}
           />
         )}
@@ -259,7 +263,7 @@ export function CompanyPage() {
         <div className="section-heading">
           <div>
             <h2>Projects and their documents</h2>
-            <p>Each project shows the approved knowledge records and uploaded PDFs connected to it.</p>
+            <p>Documents only members of that project need to read.</p>
           </div>
           <Link to="/projects">
             Manage projects <ArrowRight size={15} />
@@ -312,11 +316,11 @@ export function CompanyPage() {
                       {files.length > 4 ? <small>+{files.length - 4} more documents</small> : null}
                     </div>
                   ) : (
-                    <div className="company-project-empty">No PDF knowledge has been added to this project.</div>
+                    <div className="company-project-empty">No documents for this project yet.</div>
                   )}
                   <footer>
                     <Button size="small" variant="secondary" onClick={() => setUploadOpen(true)}>
-                      Add PDF
+                      Add document
                     </Button>
                     <Link to={`/projects/${project.id}`}>
                       Open project <ArrowRight size={14} />
@@ -341,14 +345,14 @@ export function CompanyPage() {
           <BookOpenCheck size={24} />
         </span>
         <div>
-          <h2>Connected to onboarding</h2>
+          <h2>Next: put documents in a package</h2>
           <p>
-            Published PDFs with a clean security scan automatically appear as document options when HR builds an
-            onboarding journey. There is no second copy of company or project data.
+            Documents with a clean scan can be added to a company or project package. The package decides what a new
+            hire reads, and its quiz checks they understood it.
           </p>
         </div>
-        <Link className="button button--secondary button--medium" to="/onboarding/manage">
-          Open onboarding builder <ArrowRight size={15} />
+        <Link className="button button--secondary button--medium" to="/onboarding/packages">
+          Go to packages & quizzes <ArrowRight size={15} />
         </Link>
       </Card>
 
@@ -429,7 +433,7 @@ function PdfUploadDialog({
     <Dialog
       open={open}
       onClose={close}
-      title="Add company or project PDF"
+      title="Add a document"
       description="Choose the PDF and where it belongs. The title is taken from the file name, so no duplicate article writing is required."
       width="large"
     >

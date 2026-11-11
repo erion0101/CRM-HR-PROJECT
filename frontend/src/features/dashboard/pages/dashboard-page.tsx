@@ -19,6 +19,7 @@ import { Skeleton } from '@/components/feedback/skeleton';
 import { Avatar } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/features/auth/hooks/use-auth';
+import { OnboardingHomeWidget } from '@/features/onboarding/components/onboarding-home-widget';
 
 import type { DashboardCelebration, DashboardEmployee } from '../types';
 import { useDashboardSummary } from '../hooks/use-dashboard';
@@ -37,8 +38,8 @@ const companyLinks = [
     icon: Users
   },
   {
-    label: 'My onboarding',
-    description: 'Continue your assigned learning journey',
+    label: 'Onboarding',
+    description: 'Documents to read and the onboarding quiz',
     to: '/onboarding',
     icon: ListChecks
   },
@@ -80,9 +81,9 @@ export function DashboardPage() {
     ? [
         ...companyLinks,
         {
-          label: 'Add an employee',
-          description: 'Create and configure a new employee record',
-          to: '/employees/new',
+          label: 'Add a new hire',
+          description: 'Person, login, and onboarding in one guided flow',
+          to: '/employees/new-hire',
           icon: UserPlus
         }
       ]
@@ -90,6 +91,7 @@ export function DashboardPage() {
 
   return (
     <div className="home-dashboard-grid">
+      {canManagePeople(user) ? <OnboardingHomeWidget /> : null}
       <HomeWidget title="Celebrations" icon={<PartyPopper size={19} />}>
         {data.upcomingCelebrations.length ? (
           <div className="home-people-list">

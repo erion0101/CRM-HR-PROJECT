@@ -369,8 +369,11 @@ function DoneCard({
             Open their profile
           </Link>
         ) : null}
-        <Link className="button button--secondary button--medium" to="/onboarding/manage">
-          See onboarding progress
+        <Link
+          className="button button--secondary button--medium"
+          to={employeeId ? `/employees/${employeeId}?tab=onboarding` : '/onboarding/progress'}
+        >
+          See their onboarding
         </Link>
         <Button onClick={onRestart}>Add another new hire</Button>
       </footer>
