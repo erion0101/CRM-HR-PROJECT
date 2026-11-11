@@ -11,8 +11,8 @@ export function QuizResultCard({ result }: { result: QuizResult }) {
   return (
     <Card className={`assessment-result assessment-result--${result.status.toLowerCase()}`}>
       <div>
-        <small>Assessment result · Reading cycle {result.readingCycleNumber}</small>
-        <h2>{passed ? 'Assessment passed' : 'Reading restart required'}</h2>
+        <small>Quiz result · Round {result.readingCycleNumber}</small>
+        <h2>{passed ? 'Quiz passed' : 'Not passed yet: read the documents again'}</h2>
         <p>{result.message}</p>
         <strong>
           {result.scorePercentage}% score · {result.passingPercentage}% required

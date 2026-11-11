@@ -90,8 +90,8 @@ function QuizBuilder({ template, onClose }: { template: QuizTemplate; onClose: (
         randomizeQuestions: true,
         randomizeOptions: true
       }),
-    success: { title: 'Assessment draft created' },
-    errorTitle: 'Could not create assessment'
+    success: { title: 'Quiz draft created' },
+    errorTitle: 'Could not create the quiz'
   });
   const generate = useOnboardingMutation({
     mutationFn: generateOnboardingQuiz,
@@ -103,8 +103,11 @@ function QuizBuilder({ template, onClose }: { template: QuizTemplate; onClose: (
   });
   const publish = useOnboardingMutation({
     mutationFn: publishOnboardingQuiz,
-    success: { title: 'Assessment published', message: 'The answer key is now immutable for this onboarding version.' },
-    errorTitle: 'Could not publish assessment'
+    success: {
+      title: 'Quiz published',
+      message: 'New hires on this package get it from now on. Its questions can no longer be changed.'
+    },
+    errorTitle: 'Could not publish the quiz'
   });
   const addQuestion = useOnboardingMutation({
     mutationFn: ({ quiz, question }: { quiz: OnboardingQuizAdmin; question: QuizQuestionInput }) =>
@@ -192,7 +195,7 @@ function QuizBuilder({ template, onClose }: { template: QuizTemplate; onClose: (
             loading={publish.isPending}
             onClick={() => publish.mutate(quiz)}
           >
-            Publish immutable quiz
+            Publish quiz
           </Button>
         </div>
       ) : null}

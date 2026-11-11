@@ -62,7 +62,7 @@ export function OnboardingPage() {
   const startQuiz = useOnboardingMutation({
     mutationFn: startQuizAttempt,
     invalidate: false,
-    errorTitle: 'Assessment is not available',
+    errorTitle: 'The quiz is not available',
     onSuccess: (attempt) => navigate(`/onboarding/quiz/${attempt.id}`)
   });
 
@@ -142,7 +142,7 @@ export function OnboardingPage() {
       ) : (
         <Card>
           <EmptyState
-            title="No onboarding journey assigned"
+            title="No onboarding yet"
             description="HR or your manager can assign a published onboarding journey. Company knowledge and projects remain available."
           />
         </Card>

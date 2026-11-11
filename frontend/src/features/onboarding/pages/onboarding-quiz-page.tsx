@@ -31,14 +31,14 @@ export function OnboardingQuizPage() {
     onSuccess: async (result) => {
       await queryClient.invalidateQueries({ queryKey: ['onboarding'] });
       notify({
-        title: result.status === 'Passed' ? 'Assessment passed' : 'Reading restart required',
+        title: result.status === 'Passed' ? 'Quiz passed' : 'Not passed yet: read the documents again',
         message: result.message,
         tone: result.status === 'Passed' ? 'success' : 'error'
       });
       navigate('/onboarding/me', { state: { quizResult: result } });
     },
     onError: (error) =>
-      notify({ title: 'Could not submit assessment', message: toAppError(error).message, tone: 'error' })
+      notify({ title: 'Could not submit the quiz', message: toAppError(error).message, tone: 'error' })
   });
 
   if (query.isLoading)
@@ -51,8 +51,8 @@ export function OnboardingQuizPage() {
     return (
       <Card>
         <ErrorState
-          title="Assessment unavailable"
-          description="This assessment does not exist or is no longer available to your account."
+          title="Quiz unavailable"
+          description="This quiz does not exist or is no longer available to your account."
           onRetry={() => void query.refetch()}
         />
       </Card>
@@ -61,7 +61,7 @@ export function OnboardingQuizPage() {
     return (
       <div className="page-stack">
         <PageHeader
-          eyebrow="Assessment"
+          eyebrow="Onboarding quiz"
           title={`Attempt ${attempt.attemptNumber}`}
           description={`This attempt is ${attempt.status.toLowerCase()}.`}
         />
@@ -82,8 +82,8 @@ export function OnboardingQuizPage() {
   return (
     <div className="page-stack quiz-page">
       <PageHeader
-        eyebrow={`Reading cycle ${attempt.readingCycleNumber} · Attempt ${attempt.attemptNumber}`}
-        title="Onboarding assessment"
+        eyebrow={`Round ${attempt.readingCycleNumber} · Attempt ${attempt.attemptNumber}`}
+        title="Onboarding quiz"
         description="Select one answer for every question. Your answers are graded securely after submission."
         actions={
           <Link className="button button--secondary button--medium" to="/onboarding/me">

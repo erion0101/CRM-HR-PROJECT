@@ -29,7 +29,7 @@ const labels: Record<RunStepKey, string> = {
   employee: 'Create the employee record',
   job: 'Set department, position, and manager',
   project: 'Add to the project',
-  onboarding: 'Start the onboarding journey',
+  onboarding: 'Start their onboarding',
   employment: 'Activate employment',
   login: 'Create the login account'
 };

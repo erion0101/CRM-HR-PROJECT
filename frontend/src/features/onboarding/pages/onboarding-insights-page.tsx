@@ -50,7 +50,7 @@ function InsightsContent({ insights }: { insights: OnboardingInsights }) {
     <>
       <div className="stats-grid">
         <StatCard
-          label="Active journeys"
+          label="In onboarding"
           value={insights.activeJourneys}
           helper={`${insights.completedLast30Days} completed in the last 30 days`}
           icon={CheckCircle2}
@@ -58,14 +58,14 @@ function InsightsContent({ insights }: { insights: OnboardingInsights }) {
         <StatCard
           label="Overdue"
           value={insights.overdueJourneys}
-          helper="Journeys with a required step past its due date"
+          helper="People with a required step past its due date"
           icon={Clock3}
           tone="amber"
         />
         <StatCard
           label="Waiting for review"
           value={insights.awaitingReview}
-          helper="Journeys with a milestone to approve"
+          helper="People with a milestone to approve"
           icon={AlertTriangle}
           tone="purple"
         />
@@ -99,7 +99,7 @@ function InsightsContent({ insights }: { insights: OnboardingInsights }) {
           <Card>
             <EmptyState
               title="Everyone is on track"
-              description="No journey is overdue, stalled, or failing right now."
+              description="Nobody is overdue, stuck, or failing the quiz right now."
             />
           </Card>
         )}

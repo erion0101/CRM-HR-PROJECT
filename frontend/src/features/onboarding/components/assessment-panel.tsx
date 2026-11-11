@@ -12,6 +12,7 @@ import type {
   OnboardingReadingStatus
 } from '../types';
 import { groupBy } from '../utils/group-by';
+import { quizStatus } from '../utils/onboarding-labels';
 import { ReadingModule } from './reading-module';
 
 interface AssessmentPanelProps {
@@ -30,16 +31,16 @@ export function AssessmentPanel({ assignment, busy, onReading, onStartQuiz }: As
     <section className="assessment-panel" id="required-reading">
       <div className="section-heading">
         <div>
-          <h2>Required reading and assessment</h2>
+          <h2>Read, then take the quiz</h2>
           <p>
-            Reading cycle {assessment.readingCycleNumber}. All required items must be read in this cycle before the quiz
-            unlocks.
+            Open and read every required document, then mark it as read. The quiz unlocks when all of them are read.
+            {assessment.readingCycleNumber > 1 ? ` This is round ${assessment.readingCycleNumber}.` : ''}
           </p>
         </div>
         <Badge
           tone={assessment.status === 'Passed' ? 'positive' : assessment.status === 'Available' ? 'info' : 'warning'}
         >
-          {assessment.status}
+          {quizStatus[assessment.status].label}
         </Badge>
       </div>
 
@@ -96,14 +97,14 @@ function AssessmentGate({
     assessment.status === 'Locked'
       ? 'Complete every required reading item to unlock the quiz.'
       : assessment.status === 'Passed'
-        ? 'You passed this assessment phase.'
+        ? 'You passed the quiz.'
         : `Ready when you are. Passing score: ${assessment.passingPercentage}%.`;
 
   return (
     <Card className={`assessment-gate assessment-gate--${assessment.status.toLowerCase()}`}>
       <span>{icon}</span>
       <div>
-        <small>Knowledge assessment</small>
+        <small>Onboarding quiz</small>
         <h3>{assessment.quizTitle ?? 'Onboarding quiz'}</h3>
         <p>{description}</p>
       </div>
@@ -124,7 +125,7 @@ function AttemptHistory({ assessment }: { assessment: OnboardingAssessment }) {
   if (!assessment.attempts.length) return null;
   return (
     <Card className="attempt-history">
-      <h3>Assessment history</h3>
+      <h3>Quiz attempts</h3>
       {assessment.attempts.map((attempt) => (
         <div key={attempt.id}>
           <span>

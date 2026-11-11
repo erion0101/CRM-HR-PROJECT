@@ -13,7 +13,7 @@ export function JourneyOverview({ journey, next }: { journey: OnboardingAssignme
           <span className="onboarding-hero__icon">
             <Sparkles size={22} />
           </span>
-          <small>Current journey</small>
+          <small>Your onboarding</small>
           <h2>{journey.templateName}</h2>
           {journey.projectTemplateName ? (
             <small>

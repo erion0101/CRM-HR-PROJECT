@@ -170,8 +170,8 @@ export function TemplateDialog({
     <Dialog
       open={open}
       onClose={onClose}
-      title="Create onboarding template"
-      description="Build an ordered, reusable journey. Assignments snapshot the published version."
+      title="New package"
+      description="Choose the documents and steps a new hire goes through, in order. People already in onboarding keep the version they started with."
       width="large"
     >
       <form className="form-stack" onSubmit={submit}>
@@ -231,7 +231,7 @@ export function TemplateDialog({
 
         <div className="section-heading">
           <div>
-            <h3>Journey steps</h3>
+            <h3>Steps</h3>
             <p>
               Steps run in this order. Add one required document step per file when every document must be reread after
               a failed assessment.

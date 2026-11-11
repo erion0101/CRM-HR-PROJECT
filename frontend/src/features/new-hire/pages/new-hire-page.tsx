@@ -328,7 +328,7 @@ function DoneCard({
           <CheckCircle2 size={22} /> {values.firstName} {values.lastName} is set up
         </h2>
         <p>
-          {values.startOnboarding ? 'Their onboarding journey is ready and waiting for them. ' : ''}
+          {values.startOnboarding ? 'Their onboarding is ready and waiting for them. ' : ''}
           {values.createLogin ? 'Send them these sign-in details:' : 'They have no login yet.'}
         </p>
       </header>

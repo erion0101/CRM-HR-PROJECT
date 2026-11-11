@@ -14,8 +14,8 @@ internal sealed class OnboardingNotifier(INotificationRepository notifications, 
     private const string ManagerLink = "/onboarding/manage";
 
     public void JourneyAssigned(OnboardingAssignment assignment, string journeyName) =>
-        Notify(assignment, assignment.EmployeeId, NotificationType.JourneyAssigned, "New onboarding journey",
-            $"\"{journeyName}\" has been assigned to you. Start with the first step whenever you are ready.", EmployeeLink);
+        Notify(assignment, assignment.EmployeeId, NotificationType.JourneyAssigned, "Your onboarding is ready",
+            $"You have been given \"{journeyName}\". Open Onboarding and start with the first document.", EmployeeLink);
 
     public void QuizUnlocked(OnboardingAssignment assignment) =>
         Notify(assignment, assignment.EmployeeId, NotificationType.QuizUnlocked, "Your onboarding quiz is unlocked",
@@ -46,7 +46,7 @@ internal sealed class OnboardingNotifier(INotificationRepository notifications, 
     public async Task JourneyCompletedAsync(OnboardingAssignment assignment, CancellationToken cancellationToken)
     {
         Notify(assignment, assignment.EmployeeId, NotificationType.JourneyCompleted, "Onboarding complete",
-            "You have completed every required step of your onboarding journey. Welcome aboard!", EmployeeLink);
+            "You have completed every required step of your onboarding. Welcome aboard!", EmployeeLink);
         if (Reviewer(assignment) is { } reviewer)
         {
             var name = await EmployeeNameAsync(assignment, cancellationToken);
