@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 
 import { Card } from '@/components/ui/card';
 
+import { statusOf } from '../utils/onboarding-labels';
 import type { OnboardingAssignment, OnboardingStep } from '../types';
 
 export function JourneyOverview({ journey, next }: { journey: OnboardingAssignment; next?: OnboardingStep }) {
@@ -32,7 +33,7 @@ export function JourneyOverview({ journey, next }: { journey: OnboardingAssignme
       <div className="onboarding-summary">
         <SummaryCard
           label="Status"
-          value={journey.status}
+          value={statusOf(journey.status).label}
           detail={`Started ${new Date(journey.startDate).toLocaleDateString()}`}
         />
         <SummaryCard label="Manager" value={journey.managerName ?? 'Not assigned'} detail="Journey reviewer" />

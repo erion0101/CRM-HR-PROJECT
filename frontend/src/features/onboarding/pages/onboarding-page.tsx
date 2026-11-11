@@ -99,7 +99,7 @@ export function OnboardingPage() {
       <PageHeader
         eyebrow="Onboarding"
         title={`Welcome, ${dashboard.employeeName.split(' ')[0]}`}
-        description={`${subtitle}. Follow your structured journey and return whenever you need guidance.`}
+        description={`${subtitle}. Read your documents, take the quiz, and come back any time.`}
       >
         <OnboardingWorkspaceTabs />
       </PageHeader>

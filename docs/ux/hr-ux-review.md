@@ -127,8 +127,31 @@ scrolling.
 
 ## 4. What was changed
 
-Filled in as the work lands (one entry per problem above). See the commit history on `feature/hr-ux`.
+Branch `feature/hr-ux`. Screenshots: `docs/ux/screenshots/before-*.png` and `after-*.png` (1280px and 360px).
+
+| # | Problem | What changed | See |
+|---|---|---|---|
+| 1 | Onboarding landed HR on an error page | `/onboarding` is an **Overview** for HR and managers. Employees still land on their own onboarding; anyone with an employee record also has **My onboarding** (`/onboarding/me`). | `before-onboarding-1280` → `after-onboarding-1280` |
+| 2 | No setup overview, no next step | Overview starts with **Set up onboarding**: company documents → company package → company quiz, then the same for each project, with live status, the next step highlighted, and a button straight to it. When everything is done it shrinks to one line. Home for HR starts with the same next step and the people counts. | `after-onboarding-*`, `after-home-*` |
+| 3 | Profile and user list said nothing about onboarding | New **Onboarding** tab on the profile (HR and managers): packages, reviewer, mentor, progress, documents read, quiz status and last score, other steps; **Start onboarding** with the person already chosen. Cancelled onboarding is folded away. In User access the linked employee opens their onboarding, and the page offers **Add a new hire** next to "Create login only". | `before-employee-profile-1280` → `after-employee-profile-onboarding-1280`, `after-users-1280` |
+| 4 | Documents in three places, three names | "Company" is now **Documents**, under Onboarding in the menu and as a tab. Wording is "document" throughout, and the page ends with "Next: put documents in a package". | `before-company-1280` → `after-company-1280` |
+| 5 | Setup and progress on one page | Split into **Packages & quizzes** (setup: a three-step explanation, and each package card shows its quiz status and the one next action) and **Progress** (everyone in onboarding, filters, search, plain status, reading and quiz status, approvals, Start onboarding). `/onboarding/manage` redirects. | `before-onboarding-manage-1280` → `after-onboarding-packages-1280`, `after-onboarding-progress-1280` |
+| 6 | Mixed vocabulary | **package / onboarding / quiz** everywhere, including notifications. "Round 2" instead of "reading cycle 2". Plain status labels ("Not started", "Waiting for review", "Quiz ready to take") instead of codes. | all `after-*` |
+| 7 | Home not useful for HR | Onboarding widget on top; "Add an employee" now opens **New hire**. | `after-home-1280` |
+| — | Menu by data type | Menu groups by task: **Workspace** (Home, My info), **People** (People, New hire), **Onboarding** (Onboarding, Documents), **Intelligence**, **Administration**. Onboarding tabs depend on the role. | sidebar in any `after-*` |
+
+Found while using the app and fixed on the way:
+
+- **Pages scrolled sideways on phones.** Every phone-width rule used `grid-template-columns: 1fr`, which grows to the widest content; the non-wrapping tab row made pages 700–1000px wide on a 360px screen (`before-onboarding-manage-360`). All phone rules now use `minmax(0, 1fr)` and the tab row scrolls inside the page (`after-onboarding-progress-360`).
+- **New hires had no manager.** New hire recorded the job through the department endpoint, which does not create the reporting line, so profiles showed "Manager: Not assigned". It now uses the employee assignment endpoint (the same rule as the profile). The two demo hires were repaired through the normal API.
+- **Home briefly showed the wrong next step** ("no documents yet") while document lists were still loading; the setup now waits for all its data.
 
 ## 5. Not done / not verified
 
-Filled in at the end.
+- **Checked:** every screen above, signed in as HR at 1280px and 360px, and the demo employee's own onboarding, using real screenshots of the running app; frontend typecheck, lint, 30 tests and build; backend build and all 112 tests (the only backend change is notification wording).
+- **Not checked:** the Manager role's view in a browser (it follows the same code paths, but I took no screenshots as a manager); keyboard-only and screen-reader passes (controls are native buttons/links with labels, and states always have text, but I did not test with VoiceOver); the dialogs (New package, Start onboarding, the quiz builder) were not screenshotted.
+- **Not changed, on purpose:**
+  - The employee's own onboarding page was only reworded. When a package has no published quiz, reading steps appear as ordinary "Start / Complete" steps; that is existing behaviour of the rules and it gets long on a phone. A redesign of the employee view is the next good step.
+  - The profile still has eight tabs; the row scrolls, but the last tabs are hidden at 1280px.
+  - Quiz-builder deletions still use the browser confirm box; the mobile menu has no focus trap.
+  - The AI quiz needs `OPENAI_API_KEY`; with it missing, quizzes stay at "Build the quiz".
