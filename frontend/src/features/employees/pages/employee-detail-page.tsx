@@ -16,7 +16,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 
-import { canManagePeople, canViewSalary } from '@/app/access';
+import { canManageOnboarding, canManagePeople, canViewSalary } from '@/app/access';
 import { useNotification } from '@/app/providers/notification-provider';
 import { queryClient } from '@/app/providers/query-provider';
 import { EmptyState } from '@/components/feedback/empty-state';
@@ -43,6 +43,7 @@ import { archiveDocument, downloadDocument, uploadDocument } from '@/features/do
 import { DocumentPreviewDialog } from '@/features/documents/components/document-preview-dialog';
 import { documentKeys, useDocumentFolders, useEmployeeDocuments } from '@/features/documents/hooks/use-documents';
 import type { EmployeeDocument } from '@/features/documents/types';
+import { EmployeeOnboardingTab } from '@/features/onboarding/components/employee-onboarding-tab';
 import { useDepartments, usePositions } from '@/features/organization/hooks/use-organization';
 import { toAppError } from '@/lib/api-error';
 
@@ -88,6 +89,7 @@ export function EmployeeDetailPage() {
   });
   const tabs = [
     { id: 'overview', label: 'Overview' },
+    ...(canManageOnboarding(user) ? [{ id: 'onboarding', label: 'Onboarding' }] : []),
     { id: 'employment', label: 'Employment' },
     { id: 'history', label: 'History' },
     { id: 'contracts', label: 'Contracts' },
@@ -148,6 +150,9 @@ export function EmployeeDetailPage() {
             onChange={(value) => setParams(value === 'overview' ? {} : { tab: value })}
           />
           {tab === 'overview' ? <OverviewTab employee={item} profile={profile.data} canEdit={canEdit} /> : null}
+          {tab === 'onboarding' && canManageOnboarding(user) ? (
+            <EmployeeOnboardingTab employeeId={employeeId} employeeName={`${item.firstName} ${item.lastName}`} />
+          ) : null}
           {tab === 'employment' ? (
             <EmploymentTab
               employeeId={employeeId}
