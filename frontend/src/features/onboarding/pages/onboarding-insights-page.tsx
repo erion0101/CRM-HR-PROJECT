@@ -1,37 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, CheckCircle2, Clock3, Target } from 'lucide-react';
-import { Link } from 'react-router';
 
 import { EmptyState } from '@/components/feedback/empty-state';
 import { ErrorState } from '@/components/feedback/error-state';
 import { Skeleton } from '@/components/feedback/skeleton';
 import { PageHeader } from '@/components/navigation/page-header';
-import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { StatCard } from '@/components/ui/stat-card';
 
 import { getOnboardingInsights } from '../api/onboarding-api';
 import { OnboardingWorkspaceTabs } from '../components/onboarding-workspace-tabs';
-import type {
-  OnboardingAttentionItem,
-  OnboardingAttentionReason,
-  OnboardingDocumentDifficulty,
-  OnboardingInsights
-} from '../types';
-
-const reasonLabel: Record<OnboardingAttentionReason, string> = {
-  OverdueSteps: 'Overdue steps',
-  RepeatedQuizFailures: 'Failed quiz repeatedly',
-  AwaitingReview: 'Waiting for review',
-  NotStarted: 'Not started'
-};
-
-const reasonTone: Record<OnboardingAttentionReason, 'negative' | 'warning' | 'neutral'> = {
-  OverdueSteps: 'negative',
-  RepeatedQuizFailures: 'negative',
-  AwaitingReview: 'warning',
-  NotStarted: 'neutral'
-};
+import { AttentionRow } from '../components/attention-row';
+import type { OnboardingDocumentDifficulty, OnboardingInsights } from '../types';
 
 export function OnboardingInsightsPage() {
   const query = useQuery({ queryKey: ['onboarding', 'insights'], queryFn: getOnboardingInsights });
@@ -151,30 +131,6 @@ function InsightsContent({ insights }: { insights: OnboardingInsights }) {
         )}
       </section>
     </>
-  );
-}
-
-function AttentionRow({ item }: { item: OnboardingAttentionItem }) {
-  return (
-    <div className="assignment-row">
-      <div>
-        <strong>
-          <Link to={`/employees/${item.employeeId}`}>{item.employeeName}</Link>
-        </strong>
-        <small>
-          {item.journeyName} · started {new Date(item.startDate).toLocaleDateString()}
-          {item.overdueSteps ? ` · ${item.overdueSteps} overdue` : ''}
-          {item.failedAttempts ? ` · ${item.failedAttempts} failed attempts` : ''}
-        </small>
-      </div>
-      <div className="row-actions">
-        {item.reasons.map((reason) => (
-          <Badge key={reason} tone={reasonTone[reason]}>
-            {reasonLabel[reason]}
-          </Badge>
-        ))}
-      </div>
-    </div>
   );
 }
 

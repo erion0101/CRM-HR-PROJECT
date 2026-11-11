@@ -1,5 +1,5 @@
 import { Suspense, type ReactNode } from 'react';
-import { createBrowserRouter } from 'react-router';
+import { createBrowserRouter, Navigate } from 'react-router';
 
 import { RouteErrorBoundary } from '@/components/feedback/route-error-boundary';
 import { Skeleton } from '@/components/feedback/skeleton';
@@ -70,9 +70,17 @@ const CompanyPage = lazyWithRetry(() =>
 const OnboardingPage = lazyWithRetry(() =>
   import('@/features/onboarding/pages/onboarding-page').then((module) => ({ default: module.OnboardingPage }))
 );
-const OnboardingManagementPage = lazyWithRetry(() =>
-  import('@/features/onboarding/pages/onboarding-management-page').then((module) => ({
-    default: module.OnboardingManagementPage
+const OnboardingHomePage = lazyWithRetry(() =>
+  import('@/features/onboarding/pages/onboarding-home-page').then((module) => ({ default: module.OnboardingHomePage }))
+);
+const OnboardingPackagesPage = lazyWithRetry(() =>
+  import('@/features/onboarding/pages/onboarding-packages-page').then((module) => ({
+    default: module.OnboardingPackagesPage
+  }))
+);
+const OnboardingProgressPage = lazyWithRetry(() =>
+  import('@/features/onboarding/pages/onboarding-progress-page').then((module) => ({
+    default: module.OnboardingProgressPage
   }))
 );
 const OnboardingInsightsPage = lazyWithRetry(() =>
@@ -124,11 +132,17 @@ export const router = createBrowserRouter([
           { path: 'projects', element: deferred(<ProjectsPage />) },
           { path: 'projects/:projectId', element: deferred(<ProjectDetailPage />) },
           { path: 'company', element: <RoleRoute roles={['HR']}>{deferred(<CompanyPage />)}</RoleRoute> },
-          { path: 'onboarding', element: deferred(<OnboardingPage />) },
+          { path: 'onboarding', element: deferred(<OnboardingHomePage />) },
+          { path: 'onboarding/me', element: deferred(<OnboardingPage />) },
           {
-            path: 'onboarding/manage',
-            element: <RoleRoute roles={['HR', 'Manager']}>{deferred(<OnboardingManagementPage />)}</RoleRoute>
+            path: 'onboarding/packages',
+            element: <RoleRoute roles={['HR']}>{deferred(<OnboardingPackagesPage />)}</RoleRoute>
           },
+          {
+            path: 'onboarding/progress',
+            element: <RoleRoute roles={['HR', 'Manager']}>{deferred(<OnboardingProgressPage />)}</RoleRoute>
+          },
+          { path: 'onboarding/manage', element: <Navigate to="/onboarding/packages" replace /> },
           {
             path: 'onboarding/insights',
             element: <RoleRoute roles={['HR', 'Manager']}>{deferred(<OnboardingInsightsPage />)}</RoleRoute>

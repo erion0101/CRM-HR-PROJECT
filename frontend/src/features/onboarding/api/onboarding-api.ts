@@ -64,8 +64,10 @@ export async function setOnboardingAutoAssign({
   return data;
 }
 
-export async function getOnboardingAssignments(): Promise<OnboardingAssignment[]> {
-  const { data } = await http.get<OnboardingAssignment[]>('/onboarding/assignments');
+export async function getOnboardingAssignments(employeeId?: string): Promise<OnboardingAssignment[]> {
+  const { data } = await http.get<OnboardingAssignment[]>('/onboarding/assignments', {
+    params: employeeId ? { employeeId } : undefined
+  });
   return data;
 }
 

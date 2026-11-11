@@ -35,7 +35,7 @@ export function OnboardingQuizPage() {
         message: result.message,
         tone: result.status === 'Passed' ? 'success' : 'error'
       });
-      navigate('/onboarding', { state: { quizResult: result } });
+      navigate('/onboarding/me', { state: { quizResult: result } });
     },
     onError: (error) =>
       notify({ title: 'Could not submit assessment', message: toAppError(error).message, tone: 'error' })
@@ -70,7 +70,7 @@ export function OnboardingQuizPage() {
             <CheckCircle2 size={36} />
             <h2>{attempt.scorePercentage}%</h2>
             <p>Passing score: {attempt.passingPercentage}%</p>
-            <Link className="button button--primary button--medium" to="/onboarding">
+            <Link className="button button--primary button--medium" to="/onboarding/me">
               Return to onboarding
             </Link>
           </div>
@@ -86,7 +86,7 @@ export function OnboardingQuizPage() {
         title="Onboarding assessment"
         description="Select one answer for every question. Your answers are graded securely after submission."
         actions={
-          <Link className="button button--secondary button--medium" to="/onboarding">
+          <Link className="button button--secondary button--medium" to="/onboarding/me">
             <ArrowLeft size={16} /> Exit assessment
           </Link>
         }

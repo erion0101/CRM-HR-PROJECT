@@ -30,6 +30,7 @@ export function AssignmentDialog({
   open,
   loading,
   templates,
+  employee,
   onClose,
   onSave
 }: {
@@ -37,6 +38,8 @@ export function AssignmentDialog({
   loading: boolean;
   /** Published templates; project packages are also used to preview what a project adds. */
   templates: OnboardingTemplate[];
+  /** When set, onboarding is started for this person and the employee picker is hidden. */
+  employee?: { id: string; name: string };
   onClose: () => void;
   onSave: (value: AssignmentDraft) => Promise<unknown>;
 }) {
@@ -44,7 +47,7 @@ export function AssignmentDialog({
   const projects = useQuery({ queryKey: ['projects'], queryFn: getProjects });
   const form = useForm<AssignmentFormValues>({
     defaultValues: {
-      employeeId: '',
+      employeeId: employee?.id ?? '',
       templateId: '',
       projectId: '',
       managerEmployeeId: '',
@@ -107,19 +110,21 @@ export function AssignmentDialog({
     <Dialog
       open={open}
       onClose={onClose}
-      title="Assign onboarding journey"
-      description="Choose the package, project, and the documents this employee must read."
+      title={employee ? `Start onboarding for ${employee.name}` : 'Start onboarding'}
+      description="Choose the package, the project if any, and the documents this person must read."
     >
       <form className="form-stack" onSubmit={submit}>
-        <FieldShell label="Employee" htmlFor="assignmentEmployee" required>
-          <Select id="assignmentEmployee" {...form.register('employeeId', { required: true })}>
-            <option value="">Choose an employee</option>
-            <NamedOptions items={people} />
-          </Select>
-        </FieldShell>
-        <FieldShell label="Published template" htmlFor="assignmentTemplate" required>
+        {employee ? null : (
+          <FieldShell label="Employee" htmlFor="assignmentEmployee" required>
+            <Select id="assignmentEmployee" {...form.register('employeeId', { required: true })}>
+              <option value="">Choose an employee</option>
+              <NamedOptions items={people} />
+            </Select>
+          </FieldShell>
+        )}
+        <FieldShell label="Package" htmlFor="assignmentTemplate" required>
           <Select id="assignmentTemplate" {...form.register('templateId', { required: true })}>
-            <option value="">Choose a template</option>
+            <option value="">Choose a package</option>
             <NamedOptions items={templateOptions} />
           </Select>
         </FieldShell>
@@ -167,7 +172,7 @@ export function AssignmentDialog({
             Cancel
           </Button>
           <Button type="submit" loading={loading}>
-            Assign journey
+            Start onboarding
           </Button>
         </div>
       </form>
