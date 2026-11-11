@@ -43,14 +43,28 @@ export function EmployeeOnboardingTab({ employeeId, employeeName }: { employeeId
 
   const visible = (journeys.data ?? []).filter((item) => item.status !== 'Superseded');
   const open = visible.filter((item) => !['Completed', 'Cancelled'].includes(item.status));
+  const completed = visible.filter((item) => item.status === 'Completed');
+  const cancelled = visible.filter((item) => item.status === 'Cancelled');
 
   return (
     <div className="page-stack">
       {visible.length ? (
         <>
-          {visible.map((journey) => (
+          {[...open, ...completed].map((journey) => (
             <JourneyCard key={journey.id} journey={journey} />
           ))}
+          {cancelled.length ? (
+            <details className="journey-past">
+              <summary>
+                {cancelled.length} cancelled {cancelled.length === 1 ? 'onboarding' : 'onboardings'}
+              </summary>
+              <div className="page-stack">
+                {cancelled.map((journey) => (
+                  <JourneyCard key={journey.id} journey={journey} />
+                ))}
+              </div>
+            </details>
+          ) : null}
           <div className="row-actions">
             <Button variant="secondary" size="small" onClick={() => setStarting(true)}>
               <UserRoundCheck size={15} /> {open.length ? 'Start another onboarding' : 'Start onboarding again'}

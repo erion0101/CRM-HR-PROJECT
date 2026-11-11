@@ -584,6 +584,7 @@ textarea:focus-visible {
 }
 .page-header__toolbar {
   grid-column: 1 / -1;
+  min-width: 0;
 }
 .eyebrow {
   display: inline-block;
@@ -4497,10 +4498,10 @@ textarea:focus-visible {
     padding: 25px 18px 45px;
   }
   .detail-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .employee-profile-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .employee-profile-layout > aside {
     position: static;
@@ -4527,7 +4528,7 @@ textarea:focus-visible {
     flex-wrap: wrap;
   }
   .login-page {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .login-showcase {
     display: none;
@@ -4558,7 +4559,7 @@ textarea:focus-visible {
   }
   .leadership-grid,
   .leadership-form-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .leadership-card {
     grid-template-columns: auto auto minmax(0, 1fr);
@@ -4576,16 +4577,16 @@ textarea:focus-visible {
   }
   .ai-workspace {
     min-height: calc(100vh - 115px);
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .ai-history {
     display: none;
   }
   .project-detail-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .company-project-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .company-onboarding-link {
     grid-template-columns: auto 1fr;
@@ -4603,7 +4604,7 @@ textarea:focus-visible {
 
 @media (max-width: 600px) {
   .page-header {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .page-header__actions {
     width: 100%;
@@ -4631,7 +4632,7 @@ textarea:focus-visible {
   }
   .employee-folder-grid,
   .employee-document-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .employee-document-browser > header {
     grid-template-columns: 1fr auto;
@@ -4647,10 +4648,10 @@ textarea:focus-visible {
   }
   .stats-grid,
   .form-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .home-dashboard-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .home-widget--welcome {
     grid-column: auto;
@@ -4687,7 +4688,7 @@ textarea:focus-visible {
     flex-direction: column;
   }
   .employment-editor-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .employee-hero h1 {
     font-size: 20px;
@@ -4725,7 +4726,7 @@ textarea:focus-visible {
   }
   .folder-grid,
   .document-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .workspace-toolbar,
   .org-chart-toolbar {
@@ -4768,7 +4769,7 @@ textarea:focus-visible {
   }
   .ai-composer {
     margin: 0 12px 12px;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .ai-composer > .button {
     justify-content: center;
@@ -4781,7 +4782,7 @@ textarea:focus-visible {
   .project-grid,
   .template-grid,
   .onboarding-summary {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .company-section__header {
     align-items: stretch;
@@ -4797,7 +4798,7 @@ textarea:focus-visible {
     grid-column: 2 / -1;
   }
   .company-onboarding-link {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .onboarding-hero {
     align-items: flex-start;
@@ -4957,7 +4958,7 @@ textarea:focus-visible {
 }
 @media (max-width: 640px) {
   .review-list > div {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 2px;
   }
   .wizard-card {
@@ -5252,10 +5253,10 @@ textarea:focus-visible {
 
 @media (max-width: 760px) {
   .how-it-works {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .progress-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 8px;
   }
   .progress-row__actions {
@@ -5275,4 +5276,22 @@ textarea:focus-visible {
 }
 .package-card footer > * {
   flex: 0 1 auto;
+}
+
+.home-widget.home-widget--onboarding {
+  min-height: 0;
+}
+.home-onboarding a:not(.button) {
+  color: var(--forest-700);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.journey-past summary {
+  cursor: pointer;
+  color: var(--forest-700);
+  font-weight: 700;
+}
+.journey-past[open] summary {
+  margin-bottom: 12px;
 }

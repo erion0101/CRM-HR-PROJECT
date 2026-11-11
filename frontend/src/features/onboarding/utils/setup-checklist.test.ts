@@ -44,8 +44,15 @@ describe('buildSetupChecklist', () => {
     expect(next).toMatchObject({
       label: 'Company quiz',
       detail: 'Draft, 0 questions',
-      actionLabel: 'Review and publish'
+      actionLabel: 'Build the quiz'
     });
+    const reviewing = buildSetupChecklist({
+      companyDocuments: { ready: 5, scanning: 0 },
+      projects: [],
+      packages: [pkg({})],
+      quizzes: { company: quiz('Draft', 12) }
+    });
+    expect(reviewing.next?.actionLabel).toBe('Review and publish');
   });
 
   it('adds documents, package and quiz lines for each project', () => {

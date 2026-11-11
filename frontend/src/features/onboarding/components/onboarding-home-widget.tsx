@@ -28,7 +28,7 @@ export function OnboardingHomeWidget() {
               'Checking setup…'
             ) : setup.next ? (
               <>
-                Next setup step: <strong>{setup.next.label.toLowerCase()}</strong> ({setup.next.detail.toLowerCase()}).{' '}
+                Next setup step: <strong>{setup.next.label.toLowerCase()}</strong> ({setup.next.detail.toLowerCase()}) ·{' '}
                 <Link to={setup.next.to}>{setup.next.actionLabel}</Link>
               </>
             ) : (

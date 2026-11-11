@@ -46,7 +46,9 @@ export function PackageCard({
         ? 'No quiz yet'
         : quiz.data.status === 'Published'
           ? `Quiz published · ${quiz.data.questions.length} questions`
-          : `Quiz draft · ${quiz.data.questions.length} questions, not published yet`;
+          : quiz.data.questions.length
+            ? `Quiz draft · ${quiz.data.questions.length} questions, not published yet`
+            : 'Quiz started, no questions yet';
   const quizReady = quiz.data?.status === 'Published';
 
   return (
@@ -86,7 +88,8 @@ export function PackageCard({
           )}
           {published ? (
             <Button size="small" variant={quizReady ? 'secondary' : 'primary'} onClick={onOpenQuiz}>
-              <Brain size={15} /> {quizReady ? 'View quiz' : quiz.data ? 'Finish the quiz' : 'Build the quiz'}
+              <Brain size={15} />{' '}
+              {quizReady ? 'View quiz' : quiz.data?.questions.length ? 'Review and publish' : 'Build the quiz'}
             </Button>
           ) : (
             <Button size="small" loading={publishing} onClick={onPublish}>

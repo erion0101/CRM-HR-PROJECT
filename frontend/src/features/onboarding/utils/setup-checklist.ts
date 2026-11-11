@@ -55,7 +55,7 @@ function packageItems(id: string, label: string, pkg: OnboardingTemplate | undef
       label: `${label} quiz`,
       detail: quizDetail,
       done: quizDone,
-      actionLabel: quiz ? 'Review and publish' : 'Build the quiz',
+      actionLabel: quiz && quiz.questions.length > 0 ? 'Review and publish' : 'Build the quiz',
       to: '/onboarding/packages'
     }
   ];
