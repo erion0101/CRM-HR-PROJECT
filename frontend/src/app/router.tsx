@@ -91,6 +91,18 @@ const OnboardingInsightsPage = lazyWithRetry(() =>
 const OnboardingQuizPage = lazyWithRetry(() =>
   import('@/features/onboarding/pages/onboarding-quiz-page').then((module) => ({ default: module.OnboardingQuizPage }))
 );
+const MyTimeOffPage = lazyWithRetry(() =>
+  import('@/features/time-off/pages/my-time-off-page').then((module) => ({ default: module.MyTimeOffPage }))
+);
+const LeaveApprovalsPage = lazyWithRetry(() =>
+  import('@/features/time-off/pages/leave-approvals-page').then((module) => ({ default: module.LeaveApprovalsPage }))
+);
+const TeamCalendarPage = lazyWithRetry(() =>
+  import('@/features/time-off/pages/team-calendar-page').then((module) => ({ default: module.TeamCalendarPage }))
+);
+const LeaveSettingsPage = lazyWithRetry(() =>
+  import('@/features/time-off/pages/leave-settings-page').then((module) => ({ default: module.LeaveSettingsPage }))
+);
 const ForbiddenPage = lazyWithRetry(() =>
   import('@/features/system/pages/status-pages').then((module) => ({ default: module.ForbiddenPage }))
 );
@@ -148,6 +160,16 @@ export const router = createBrowserRouter([
             element: <RoleRoute roles={['HR', 'Manager']}>{deferred(<OnboardingInsightsPage />)}</RoleRoute>
           },
           { path: 'onboarding/quiz/:attemptId', element: deferred(<OnboardingQuizPage />) },
+          { path: 'time-off', element: deferred(<MyTimeOffPage />) },
+          {
+            path: 'time-off/approvals',
+            element: <RoleRoute roles={['HR', 'Manager']}>{deferred(<LeaveApprovalsPage />)}</RoleRoute>
+          },
+          { path: 'time-off/calendar', element: deferred(<TeamCalendarPage />) },
+          {
+            path: 'time-off/settings',
+            element: <RoleRoute roles={['HR']}>{deferred(<LeaveSettingsPage />)}</RoleRoute>
+          },
           { path: 'ai-assistant', element: deferred(<AiAssistantPage />) },
           { path: 'ai-assistant/:conversationId', element: deferred(<AiAssistantPage />) },
           { path: 'administration/users', element: <RoleRoute roles={['HR']}>{deferred(<UsersPage />)}</RoleRoute> },

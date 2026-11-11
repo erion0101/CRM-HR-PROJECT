@@ -1,5 +1,6 @@
 import {
   Bot,
+  CalendarDays,
   ChevronDown,
   CircleUserRound,
   FileClock,
@@ -18,7 +19,14 @@ import {
 import { useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router';
 
-import { canManagePeople, canManageUsers, canViewAudit, canViewCompanyWorkspace, roleLabels } from '@/app/access';
+import {
+  canApproveLeave,
+  canManagePeople,
+  canManageUsers,
+  canViewAudit,
+  canViewCompanyWorkspace,
+  roleLabels
+} from '@/app/access';
 import { Avatar } from '@/components/ui/avatar';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { NotificationBell } from '@/features/notifications/components/notification-bell';
@@ -81,6 +89,18 @@ export function AppShell() {
           activePaths: ['/onboarding', '/knowledge', '/projects']
         },
         { label: 'Documents', to: '/company', icon: FileText, visible: canViewCompanyWorkspace(user) }
+      ]
+    },
+    {
+      label: 'Time off',
+      items: [
+        {
+          label: 'Time off',
+          // People without an employee profile (such as the HR admin) have no own time off; they start on approvals.
+          to: user?.employeeId ? '/time-off' : canApproveLeave(user) ? '/time-off/approvals' : '/time-off/calendar',
+          icon: CalendarDays,
+          activePaths: ['/time-off']
+        }
       ]
     },
     { label: 'Intelligence', items: [{ label: 'AI assistant', to: '/ai-assistant', icon: Bot }] },

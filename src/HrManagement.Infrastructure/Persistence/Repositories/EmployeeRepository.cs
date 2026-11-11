@@ -172,7 +172,13 @@ internal sealed class EmployeeRepository(AppDbContext db, IAuthorizedDataScope d
 
         var total = await visibleEmployees.CountAsync(cancellationToken);
         var active = await currentEmployments.CountAsync(x => x.Status == EmploymentStatus.Active, cancellationToken);
-        var onLeave = await currentEmployments.CountAsync(x => x.Status == EmploymentStatus.OnLeave, cancellationToken);
+        // On leave today: an employment marked On leave, or approved time off that covers today.
+        var approvedLeaveToday = db.LeaveRequests.Where(x => allowed.Contains(x.EmployeeId) && x.Status == LeaveRequestStatus.Approved &&
+            x.StartDate <= today && x.EndDate >= today);
+        var onLeaveEmployees = visibleEmployees.Where(employee =>
+            currentEmployments.Any(employment => employment.EmployeeId == employee.Id && employment.Status == EmploymentStatus.OnLeave) ||
+            approvedLeaveToday.Any(leave => leave.EmployeeId == employee.Id));
+        var onLeave = await onLeaveEmployees.CountAsync(cancellationToken);
         var configured = await currentEmployments.Select(x => x.EmployeeId).Distinct().CountAsync(cancellationToken);
         var organizationUnits = await currentAssignments.Select(x => x.DepartmentId).Distinct().CountAsync(cancellationToken);
         var recentEntities = await visibleEmployees.OrderByDescending(x => x.CreatedAtUtc).ThenByDescending(x => x.Id).Take(6).ToListAsync(cancellationToken);
@@ -180,8 +186,7 @@ internal sealed class EmployeeRepository(AppDbContext db, IAuthorizedDataScope d
         foreach (var employee in recentEntities)
             recent.Add(await ToDashboardEmployeeAsync(employee, cancellationToken));
 
-        var peopleOnLeaveEntities = await visibleEmployees
-            .Where(employee => currentEmployments.Any(employment => employment.EmployeeId == employee.Id && employment.Status == EmploymentStatus.OnLeave))
+        var peopleOnLeaveEntities = await onLeaveEmployees
             .OrderBy(x => x.LastName).ThenBy(x => x.FirstName).Take(6).ToListAsync(cancellationToken);
         var peopleOnLeave = new List<DashboardEmployeeDto>(peopleOnLeaveEntities.Count);
         foreach (var employee in peopleOnLeaveEntities)

@@ -5295,3 +5295,210 @@ textarea:focus-visible {
 .journey-past[open] summary {
   margin-bottom: 12px;
 }
+
+/* Time off */
+.leave-balances {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+.leave-balance {
+  display: flex;
+  gap: 14px;
+  padding: 20px;
+}
+.leave-balance__swatch,
+.leave-requests__swatch {
+  flex: none;
+  width: 6px;
+  border-radius: 999px;
+}
+.leave-balance__swatch {
+  align-self: stretch;
+}
+.leave-balance p {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.leave-balance strong {
+  display: block;
+  font-size: 1.6rem;
+  line-height: 1.2;
+}
+.leave-balance strong small {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.leave-balance > div > small {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+}
+.leave-requests {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.leave-requests li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--line);
+}
+.leave-requests li:first-child {
+  border-top: 0;
+}
+.leave-requests__swatch {
+  align-self: stretch;
+  min-height: 34px;
+}
+.leave-requests__main {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.leave-requests__main strong {
+  overflow-wrap: anywhere;
+}
+.leave-requests__main small {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.leave-requests__main small.leave-requests__warning {
+  color: #97601c;
+}
+.leave-preview {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--forest-50);
+}
+.leave-preview p {
+  margin: 0;
+}
+.leave-preview p + p {
+  margin-top: 6px;
+}
+.leave-preview--problem {
+  background: #f9e7e5;
+  color: #a13f37;
+}
+.leave-month-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.leave-month-nav h2 {
+  margin: 0;
+  min-width: 170px;
+  text-align: center;
+  font-size: 1.1rem;
+}
+.leave-calendar {
+  padding: 12px;
+}
+.leave-calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+.leave-calendar__weekday {
+  padding: 4px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+}
+.leave-calendar__day {
+  min-height: 74px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  min-width: 0;
+}
+.leave-calendar__day--empty {
+  border-color: transparent;
+}
+.leave-calendar__day--weekend {
+  background: #f3f5f4;
+}
+.leave-calendar__day--holiday {
+  background: #faefd9;
+}
+.leave-calendar__day--today {
+  border-color: var(--forest-600);
+  box-shadow: inset 0 0 0 1px var(--forest-600);
+}
+.leave-calendar__date {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.leave-calendar__holiday,
+.leave-calendar__count {
+  font-size: 0.72rem;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.leave-calendar__holiday {
+  color: #97601c;
+}
+.leave-calendar__count {
+  width: max-content;
+  max-width: 100%;
+  padding: 2px 6px;
+  border-radius: 999px;
+  color: #396893;
+  background: #e8f0f8;
+}
+.leave-calendar__holiday-list {
+  margin: 0;
+  padding: 14px 20px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+}
+.leave-holiday-form {
+  display: grid;
+  grid-template-columns: minmax(150px, 180px) minmax(0, 1fr) auto auto;
+  align-items: end;
+  gap: 12px;
+  padding: 16px 20px;
+}
+@media (max-width: 640px) {
+  .leave-requests li {
+    flex-wrap: wrap;
+    padding: 14px 16px;
+  }
+  .leave-requests li .row-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .leave-calendar {
+    padding: 6px;
+  }
+  .leave-calendar__grid {
+    gap: 2px;
+  }
+  .leave-calendar__day {
+    min-height: 52px;
+    padding: 4px;
+  }
+  .leave-calendar__holiday {
+    display: none;
+  }
+  .leave-month-nav h2 {
+    min-width: 0;
+    flex: 1;
+  }
+  .leave-holiday-form {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+}

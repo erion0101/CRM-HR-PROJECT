@@ -45,6 +45,7 @@ import { documentKeys, useDocumentFolders, useEmployeeDocuments } from '@/featur
 import type { EmployeeDocument } from '@/features/documents/types';
 import { EmployeeOnboardingTab } from '@/features/onboarding/components/employee-onboarding-tab';
 import { useDepartments, usePositions } from '@/features/organization/hooks/use-organization';
+import { EmployeeTimeOffTab } from '@/features/time-off/components/employee-time-off-tab';
 import { toAppError } from '@/lib/api-error';
 
 import { addAssignment, archiveEmployee, getEmployee, setEmployment, updateEmployee } from '../api/employees-api';
@@ -90,6 +91,7 @@ export function EmployeeDetailPage() {
   const tabs = [
     { id: 'overview', label: 'Overview' },
     ...(canManageOnboarding(user) ? [{ id: 'onboarding', label: 'Onboarding' }] : []),
+    { id: 'time-off', label: 'Time off' },
     { id: 'employment', label: 'Employment' },
     { id: 'history', label: 'History' },
     { id: 'contracts', label: 'Contracts' },
@@ -153,6 +155,7 @@ export function EmployeeDetailPage() {
           {tab === 'onboarding' && canManageOnboarding(user) ? (
             <EmployeeOnboardingTab employeeId={employeeId} employeeName={`${item.firstName} ${item.lastName}`} />
           ) : null}
+          {tab === 'time-off' ? <EmployeeTimeOffTab employeeId={employeeId} /> : null}
           {tab === 'employment' ? (
             <EmploymentTab
               employeeId={employeeId}

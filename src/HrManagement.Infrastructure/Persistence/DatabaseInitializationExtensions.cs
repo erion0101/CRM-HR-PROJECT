@@ -42,6 +42,18 @@ public static class DatabaseInitializationExtensions
             db.Organizations.Add(organization);
             await db.SaveChangesAsync(cancellationToken);
         }
+        if (!await db.LeaveTypes.AnyAsync(x => x.OrganizationId == organization.Id, cancellationToken))
+        {
+            // Company defaults: 20 vacation days a year earned monthly (≈1.67 a month), unused days carried over until 30 June;
+            // 20 sick days a year, separate from vacation, not carried over. HR can change these in Leave settings.
+            db.LeaveTypes.Add(LeaveType.Create(organization.Id, "Vacation", "#2563eb", isPaid: true, requiresApproval: true,
+                deductsFromBalance: true, daysPerYear: 20, LeaveAccrualMethod.Monthly, carriesOver: true, maxCarryOverDays: null,
+                carryOverExpiryMonth: 6, carryOverExpiryDay: 30));
+            db.LeaveTypes.Add(LeaveType.Create(organization.Id, "Sick leave", "#dc2626", isPaid: true, requiresApproval: true,
+                deductsFromBalance: true, daysPerYear: 20, LeaveAccrualMethod.YearlyUpfront, carriesOver: false, maxCarryOverDays: null,
+                carryOverExpiryMonth: null, carryOverExpiryDay: null));
+            await db.SaveChangesAsync(cancellationToken);
+        }
         if (!await db.DocumentFolders.IgnoreQueryFilters().AnyAsync(x => x.OrganizationId == organization.Id, cancellationToken))
         {
             var allRoles = Roles.All.ToArray();

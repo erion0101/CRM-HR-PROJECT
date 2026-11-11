@@ -53,6 +53,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<OnboardingQuizAttemptQuestion> OnboardingQuizAttemptQuestions => Set<OnboardingQuizAttemptQuestion>();
     public DbSet<OnboardingQuizAnswer> OnboardingQuizAnswers => Set<OnboardingQuizAnswer>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<LeaveType> LeaveTypes => Set<LeaveType>();
+    public DbSet<PublicHoliday> PublicHolidays => Set<PublicHoliday>();
+    public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
+    public DbSet<LeaveBalanceAdjustment> LeaveBalanceAdjustments => Set<LeaveBalanceAdjustment>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

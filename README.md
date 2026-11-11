@@ -93,6 +93,14 @@ Authenticated users have three connected workspaces:
 
 Onboarding remains fully usable when AI is disabled. Published template versions and assigned steps are snapshotted so later edits do not rewrite employee history. Policy acknowledgments reference the exact published knowledge revision. See [docs/onboarding-manual-test.md](docs/onboarding-manual-test.md) for an end-to-end verification scenario.
 
+## Time off
+
+- **Time off → My time off** shows each employee's balances and requests. **Request time off** counts working days (weekends and public holidays are not counted) and shows the balance after the request before it is sent.
+- Defaults seeded for a new organization: **Vacation**, 20 days a year earned monthly (≈1.67 a month), with unused days carried over and expiring after 30 June; **Sick leave**, 20 days a year with a separate balance and no carry-over. HR changes these and the public holidays in **Time off → Leave settings**.
+- The employee's current manager (or HR) approves or rejects requests in **Time off → Approvals**, which also shows who else in the team is off then. Both sides get in-app notifications.
+- **Team calendar** shows who is out and public holidays. HR sees everyone; others see their own team, and the kind of leave only for themselves and their reports.
+- Balances are calculated from the rules, employment dates, requests and HR adjustments (profile → Time off → Adjust balance), so there is no year-end job. See [docs/hr-modules-plan.md](docs/hr-modules-plan.md).
+
 ## Demo company
 
 `scripts/demo/` loads a fictional medical-device company (AsterCare Medical) with company and project documents and onboarding packages. See [scripts/demo/README.md](scripts/demo/README.md).

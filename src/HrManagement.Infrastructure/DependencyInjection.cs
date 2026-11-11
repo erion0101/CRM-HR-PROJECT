@@ -98,6 +98,7 @@ public static class DependencyInjection
         services.AddScoped<IProjectRepository, ProjectRepository>();
         services.AddScoped<IOnboardingRepository, OnboardingRepository>();
         services.AddScoped<HrManagement.Application.Features.Notifications.INotificationRepository, NotificationRepository>();
+        services.AddScoped<HrManagement.Application.Features.Leave.ILeaveRepository, LeaveRepository>();
         services.AddScoped<IOnboardingOverdueReminderProcessor, OnboardingOverdueReminderProcessor>();
         services.AddScoped<HrManagement.Application.Features.Notifications.INotificationRetentionProcessor, NotificationRetentionProcessor>();
         services.AddScoped<HrManagement.Application.Features.Onboarding.Insights.IOnboardingInsightsReader, OnboardingInsightsReader>();

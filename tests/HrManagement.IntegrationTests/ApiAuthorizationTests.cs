@@ -18,7 +18,7 @@ using Xunit;
 
 namespace HrManagement.IntegrationTests;
 
-public sealed class ApiAuthorizationTests : IAsyncLifetime
+public sealed partial class ApiAuthorizationTests : IAsyncLifetime
 {
     private const string AdminEmail = "admin@integration.local";
     private const string AdminPassword = "Integration-Admin-Password-123!";

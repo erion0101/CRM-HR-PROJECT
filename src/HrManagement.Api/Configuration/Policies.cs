@@ -18,4 +18,6 @@ public static class Policies
     public const string OnboardingAdmin = "OnboardingAdmin";
     public const string OnboardingManage = "OnboardingManage";
     public const string ProjectCreate = "ProjectCreate";
+    public const string LeaveAdmin = "LeaveAdmin";
+    public const string LeaveApprove = "LeaveApprove";
 }

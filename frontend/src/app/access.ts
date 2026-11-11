@@ -19,4 +19,6 @@ export const canViewAudit = (user: CurrentUser | null) => hasAnyRole(user, ['HR'
 export const canManageKnowledge = (user: CurrentUser | null) => hasAnyRole(user, ['HR']);
 export const canViewCompanyWorkspace = (user: CurrentUser | null) => hasAnyRole(user, ['HR']);
 export const canManageOnboarding = (user: CurrentUser | null) => hasAnyRole(user, ['HR', 'Manager']);
+export const canManageLeave = (user: CurrentUser | null) => hasAnyRole(user, ['HR']);
+export const canApproveLeave = (user: CurrentUser | null) => hasAnyRole(user, ['HR', 'Manager']);
 export const canManageProjects = (user: CurrentUser | null) => hasAnyRole(user, ['HR', 'ProductManager']);

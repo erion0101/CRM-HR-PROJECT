@@ -18,6 +18,8 @@ public static class DependencyInjection
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddScoped<IAiToolRegistry, AiToolRegistry>();
         services.AddScoped<IAiOrchestrator, AiOrchestrator>();
+        services.AddScoped<Features.Leave.LeaveService>();
+        services.AddScoped<Features.Leave.LeaveNotifier>();
         return services;
     }
 }

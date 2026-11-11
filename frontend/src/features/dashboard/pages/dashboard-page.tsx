@@ -20,6 +20,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { OnboardingHomeWidget } from '@/features/onboarding/components/onboarding-home-widget';
+import { CompanyHolidays } from '@/features/time-off/components/company-holidays';
 
 import type { DashboardCelebration, DashboardEmployee } from '../types';
 import { useDashboardSummary } from '../hooks/use-dashboard';
@@ -116,14 +117,14 @@ export function DashboardPage() {
         {data.peopleOnLeave.length ? (
           <div className="home-people-list">
             {data.peopleOnLeave.map((employee) => (
-              <EmployeeRow employee={employee} detail="Currently marked on leave" key={employee.id} />
+              <EmployeeRow employee={employee} detail="Off today" key={employee.id} />
             ))}
           </div>
         ) : (
           <CompactEmpty
             icon={<CalendarDays size={28} />}
             title="Everyone is in"
-            description="Nobody in your access scope is marked as on leave today."
+            description="Nobody you can see is off today."
           />
         )}
       </HomeWidget>
@@ -178,10 +179,14 @@ export function DashboardPage() {
       </HomeWidget>
 
       <HomeWidget title="Company holidays" icon={<PartyPopper size={19} />}>
-        <CompactEmpty
-          icon={<CalendarDays size={28} />}
-          title="No holidays configured"
-          description="Company holiday dates will appear here when the holiday calendar module is configured."
+        <CompanyHolidays
+          empty={
+            <CompactEmpty
+              icon={<CalendarDays size={28} />}
+              title="No public holidays coming up"
+              description="Holidays in the next 90 days appear here. HR adds them in Time off → Leave settings."
+            />
+          }
         />
       </HomeWidget>
     </div>

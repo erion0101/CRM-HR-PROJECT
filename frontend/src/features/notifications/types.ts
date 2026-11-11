@@ -5,7 +5,11 @@ export type NotificationType =
   | 'QuizPassed'
   | 'JourneyCompleted'
   | 'ReviewRequested'
-  | 'StepOverdue';
+  | 'StepOverdue'
+  | 'LeaveRequested'
+  | 'LeaveApproved'
+  | 'LeaveRejected'
+  | 'LeaveCancelled';
 
 export interface AppNotification {
   id: string;

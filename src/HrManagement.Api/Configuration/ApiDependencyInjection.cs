@@ -42,7 +42,9 @@ public static class ApiDependencyInjection
             .AddPolicy(Policies.KnowledgeManage, policy => policy.RequireRole(Roles.Hr, Roles.ProductManager))
             .AddPolicy(Policies.OnboardingAdmin, policy => policy.RequireRole(Roles.Hr))
             .AddPolicy(Policies.OnboardingManage, policy => policy.RequireRole(Roles.Hr, Roles.Manager))
-            .AddPolicy(Policies.ProjectCreate, policy => policy.RequireRole(Roles.Hr, Roles.ProductManager));
+            .AddPolicy(Policies.ProjectCreate, policy => policy.RequireRole(Roles.Hr, Roles.ProductManager))
+            .AddPolicy(Policies.LeaveAdmin, policy => policy.RequireRole(Roles.Hr))
+            .AddPolicy(Policies.LeaveApprove, policy => policy.RequireRole(Roles.Hr, Roles.Manager));
         return services;
     }
 }
